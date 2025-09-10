@@ -1,0 +1,24 @@
+# Core Streamlit and ML dependencies for Hugging Face Spaces
+streamlit
+torch
+torchvision
+torchaudio
+transformers
+
+# Audio processing
+librosa
+soundfile
+
+# Data handling and visualization
+numpy<2
+pandas
+plotly
+
+# Additional dependencies for audio processing
+scipy
+
+# Optional: For better performance with transformers on HF Spaces
+accelerate
+
+# Optimize for Hugging Face Spaces deployment
+huggingface_hub
