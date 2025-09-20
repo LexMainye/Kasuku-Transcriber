@@ -22,3 +22,6 @@ accelerate
 
 # Optimize for Hugging Face Spaces deployment
 huggingface_hub
+
+# Clipboard support
+pyperclip

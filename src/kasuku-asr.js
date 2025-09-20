@@ -327,4 +327,54 @@ window.KasukuASR = {
     enhancedCopyToClipboard,
     clearTranscription,
     initializeKasukuASR
+
+}
+
+// Add this function to kasuku-asr.js
+function initializeMicrophoneDetection() {
+    // Observe for microphone widget interactions
+    const observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            if (mutation.addedNodes.length) {
+                // Check if audio input widget is added
+                const audioInputs = document.querySelectorAll('input[type="file"][accept="audio/*"]');
+                audioInputs.forEach(input => {
+                    if (!input.hasAttribute('data-kasuku-listener')) {
+                        input.setAttribute('data-kasuku-listener', 'true');
+                        
+                        // Listen for changes (when user records audio)
+                        input.addEventListener('change', function() {
+                            console.log('Microphone widget used - clearing current transcription');
+                            
+                            // Trigger Streamlit to clear current transcription
+                            const clearButton = document.querySelector('button[kind="secondary"]');
+                            if (clearButton && clearButton.textContent.includes('Clear Transcription')) {
+                                clearButton.click();
+                            }
+                        });
+                    }
+                });
+            }
+        });
+    });
+    
+    // Start observing
+    observer.observe(document.body, {
+        childList: true,
+        subtree: true
+    });
+}
+
+// Call this function in your initializeKasukuASR function
+function initializeKasukuASR() {
+    console.log('Initializing Kasuku ASR JavaScript functionality');
+    
+    // Initialize all functionality
+    initializeCopyButtons();
+    initializeDeleteButtons();
+    initializeScreenReader();
+    initializeChatBubbles();
+    initializeMaterialIcons();
+    initializeMicrophoneDetection(); // Add this line
+    setupMutationObserver();
 };
