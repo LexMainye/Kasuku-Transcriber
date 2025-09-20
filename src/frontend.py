@@ -665,8 +665,8 @@ def login_page():
     
     with col2:
         # Centered title and subtitle
-        st.markdown("<h1 style='text-align: center;'>Kasuku ASR 🦜</h1>", unsafe_allow_html=True)
-        st.markdown("<h4 style='text-align: center;'>Speech Recognition for Non Standard Speech</h4>", unsafe_allow_html=True)
+        st.markdown("<h1 style='text-align: center;'>Kasuku Transcriber 🦜</h1>", unsafe_allow_html=True)
+        st.markdown("<h4 style='text-align: center;'>Speech Transcription for Non Standard Speech</h4>", unsafe_allow_html=True)
         
         # Add some spacing
         st.markdown("<br>", unsafe_allow_html=True)
@@ -710,14 +710,14 @@ def login_page():
 def render_sidebar():
     """Render the sidebar with navigation and settings"""
     with st.sidebar:
-        st.markdown('<h1 class="kasuku-title"><span style="color: #000000;">Kasuku ASR</span> 🦜</h1>', unsafe_allow_html=True)
+        st.markdown('<h1 class="kasuku-title"><span style="color: #000000;">Kasuku Transcriber</span> 🦜</h1>', unsafe_allow_html=True)
         
         st.markdown("##")
         
         # New Transcirption Button with Google-style icon
         if st.button(
             "Record Yourself",
-            type="secondary" if st.session_state.current_view == 'home' else "secondary",
+            type="secondary" if st.session_state.current_view == 'Record Yourself' else "secondary",
             icon=":material/record_voice_over:",
             use_container_width=True,
             key="nav_home"
@@ -743,9 +743,7 @@ def render_sidebar():
         
         # Language selection (only show on home view)
         if st.session_state.current_view == 'Record Yourself':
-            st.markdown("""
-            ### <span class="language-icon">language</span> Language
-            """, unsafe_allow_html=True)
+            st.markdown("### :material/docs: Language to Transcribe")
             
             language_options = {
                 "English": "en",
@@ -767,7 +765,7 @@ def render_sidebar():
         st.markdown("##")
         
         # User info section
-        st.markdown("### User Info")
+        st.markdown("### :material/info: User Info")
         st.markdown(f"""
         <div style="display: flex; align-items: center; gap: 8px;">
             <span class="material-symbols-outlined" style="font-size: 20px;">person</span>

@@ -22,7 +22,7 @@ from frontend import (
 
 # Update the page config for better layout
 st.set_page_config(
-    page_title="Kasuku ASR",
+    page_title="Kasuku Transcriber",
     page_icon="🦜",
     layout="wide"
 )
