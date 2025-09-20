@@ -47,8 +47,8 @@ A simple and powerful speech transcription application designed for non-standard
 # 🌍 Supported Languages
 Currently supports transcription for:
 
-* English 🇬🇧
-* Swahili 🇹🇿
+* English 🇬🇧 : Using [open ai/whisper small](https://huggingface.co/openai/whisper-small)
+* Swahili 🇹🇿 : Using fine-tuned [smainye/sw_cv_tune_whisper_tiny_best_model](https://huggingface.co/smainye/sw_cv_tune_whisper_tiny_best_model)
 
 # 🎯 Key Benefits
 
