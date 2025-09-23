@@ -160,6 +160,12 @@ def create_transcription_item(transcription, selected_language, user_name):
     
     return transcription_item
 
+def copy_transcription(index, transcription_history):
+    """Get a specific transcription text for copying"""
+    if 0 <= index < len(transcription_history):
+        return transcription_history[index]["transcription"]
+    return None
+
 def delete_transcription(index, transcription_history):
     """Delete a transcription by index"""
     if 0 <= index < len(transcription_history):
@@ -184,3 +190,13 @@ def filter_transcriptions(transcription_history, search_query=None, language_fil
         ]
     
     return filtered_history
+
+def save_transcription_to_history(transcription, selected_language, user_name, transcription_history):
+    """Save a transcription to history with proper item creation"""
+    transcription_item = create_transcription_item(
+        transcription, 
+        selected_language, 
+        user_name
+    )
+    transcription_history.append(transcription_item)
+    return transcription_history
