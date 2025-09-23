@@ -2,6 +2,8 @@
 An ASR project for non standard Kenyan speech that uses finetunned whisper models to understand non standard Kenyan speech 
 A simple and powerful speech transcription application designed for non-standard speech patterns. Kasuku Transcriber helps you convert audio recordings into text with support for English and Swahili.
 
+
+
 # ✨ Features
 
 * **Audio Recording**: Record yourself directly in the browser
@@ -32,7 +34,7 @@ A simple and powerful speech transcription application designed for non-standard
 # 📝 3. Transcribe
 
 * Select your preferred language from the dropdown menu
-* Click "Transcribe Audio" to process your recording
+* Click "Transcribe Audio" button that appears to process your recording
 * Wait for the transcription results to appear
 
 # 💾 4. Manage Transcriptions
