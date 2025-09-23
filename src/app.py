@@ -22,7 +22,7 @@ from frontend import (
 
 # Update the page config for better layout
 st.set_page_config(
-    page_title="Kasuku Transcriber",
+    page_title="Parrot Transcriber",
     page_icon="🦜",
     layout="wide"
 )
@@ -40,7 +40,7 @@ def initialize_session_state():
     if 'show_welcome' not in st.session_state:
         st.session_state.show_welcome = True  # Show welcome initially
     if 'current_view' not in st.session_state:
-        st.session_state.current_view = 'home'  # 'home' or 'history'
+        st.session_state.current_view = 'Record Yourself'
     # Add state for current transcription result
     if 'current_transcription' not in st.session_state:
         st.session_state.current_transcription = None
@@ -83,7 +83,10 @@ def main_app():
     
     # Main recording interface
     with col2:
-        recorded_audio = st.audio_input(f"Record yourself in {selected_language}")
+        recorded_audio = st.audio_input(f"Record yourself in {selected_language}",
+                                        help="Click on the microphone button to start recording",
+                                        label_visibility="visible", 
+                                        width="stretch")
         
         audio_data = None
         sample_rate = None
