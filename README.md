@@ -17,13 +17,13 @@ A simple and powerful speech transcription application designed for non-standard
 # 🔐 1. Login
 
 - Use the demo credentials provided on the login page:
-![App Screenshot](https://github.com/LexMainye/Parrot-Transcriber/blob/9933c62d0255797a24cf7cc0e5c402eebaca39a9/Screenshots/Screen%20Shot%202025-09-23%20at%201.15.44%20PM.png)
+![App Screenshot](https://github.com/LexMainye/Kasuku-Transcriber/blob/a6b4368b8a47c62d70474efe74258fd5e8f20378/Screenshots/Screen%20Shot%202025-09-24%20at%202.09.29%20PM.png)
 
 
 
 # 🎤 2. Record Audio
 
-![App Screenshot](https://github.com/LexMainye/Parrot-Transcriber/blob/9933c62d0255797a24cf7cc0e5c402eebaca39a9/Screenshots/Screen%20Shot%202025-09-23%20at%201.03.34%20PM.png)
+![App Screenshot](https://github.com/LexMainye/Kasuku-Transcriber/blob/a6b4368b8a47c62d70474efe74258fd5e8f20378/Screenshots/Screen%20Shot%202025-09-24%20at%202.10.28%20PM.png)
 
 * Select your preferred language from the dropdown menu
 * Click the "Record Yourself" button
@@ -33,7 +33,7 @@ A simple and powerful speech transcription application designed for non-standard
 
 # 📝 3. Transcribe
 
-![App Screenshot](https://github.com/LexMainye/Parrot-Transcriber/blob/d5a3a00303341ba5a01740575de96a5301fc7d84/Screenshots/Screen%20Shot%202025-09-23%20at%201.45.53%20PM.png)
+![App Screenshot](https://github.com/LexMainye/Kasuku-Transcriber/blob/a6b4368b8a47c62d70474efe74258fd5e8f20378/Screenshots/Screen%20Shot%202025-09-24%20at%202.12.31%20PM.png)
 
 * Click "Transcribe Audio" button that appears to process your recording
 * Wait for the transcription results to appear
