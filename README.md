@@ -1,4 +1,4 @@
-# Parrot Transcriber 🦜
+# Kasuku Transcriber 🦜
 An ASR project for non standard Kenyan speech that uses finetunned whisper models to understand non standard Kenyan speech 
 A simple and powerful speech transcription application designed for non-standard speech patterns. Kasuku Transcriber helps you convert audio recordings into text with support for English and Swahili.
 
