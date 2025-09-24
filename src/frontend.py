@@ -503,7 +503,7 @@ def login_page():
         # Centered title and subtitle with Material Icons
         st.markdown("""
             <h1 class='login-main-title'>
-            Parrot Transcriber 🦜
+            Kasuku Transcriber 🦜
             </h1>
         """, unsafe_allow_html=True)
         
@@ -584,7 +584,7 @@ if __name__ == "__main__":
 def render_sidebar():
     """Render the sidebar with navigation and settings"""
     with st.sidebar:
-        st.markdown('<h1 class="kasuku-title"><span style="color: #000000;">Parrot Transcriber</span> 🦜</h1>', unsafe_allow_html=True)
+        st.markdown('<h1 class="kasuku-title"><span style="color: #000000;">Kasuku Transcriber</span> 🦜</h1>', unsafe_allow_html=True)
         
         st.markdown("##")
         
