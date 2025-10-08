@@ -1,0 +1,11 @@
+# Python virtual environment
+kasuku_env/
+
+# Python cache files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# OS-specific files
+.DS_Store
