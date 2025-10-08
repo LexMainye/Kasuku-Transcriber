@@ -11,7 +11,7 @@ soundfile>=0.12.0
 pydub
 
 # Data handling and visualization
-numpy<2
+numpy
 pandas
 
 # Additional dependencies for audio processing
