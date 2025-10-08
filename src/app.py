@@ -49,8 +49,13 @@ def initialize_session_state():
     # Add state to track if user just logged in
     if 'first_login' not in st.session_state:
         st.session_state.first_login = True  # 'home' or 'history' 
+        
+    # --- NEW SESSION STATE VARIABLE ---
+    if 'tts_voice_gender' not in st.session_state:
+        st.session_state.tts_voice_gender = 'Female' # Default gender
+    # ----------------------------------
 
-# Update this section in your main_app() function in app.py
+# app.py
 
 def main_app():
     """Main application after login"""
