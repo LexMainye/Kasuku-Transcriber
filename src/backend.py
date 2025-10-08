@@ -627,8 +627,5 @@ def cleanup_temp_audio(file_path):
         if file_path and os.path.exists(file_path):
             os.unlink(file_path)
     except Exception as e:
-<<<<<<< HEAD
+
         print(f"Cleanup error: {str(e)}")
-=======
-        print(f"Cleanup error: {str(e)}")
->>>>>>> ba0838bbbb968a3965fcf04cc3513c49ad0b0e3a
