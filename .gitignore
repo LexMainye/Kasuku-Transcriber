@@ -8,4 +8,20 @@ __pycache__/
 *.pyd
 
 # OS-specific files
-.DS_Store
+.DS_Store# Python virtual environments
+kasuku_env/
+venv/
+env/
+ENV/
+.venv/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*.class
+*.so
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
