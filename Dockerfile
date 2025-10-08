@@ -48,8 +48,4 @@ USER appuser
 
 EXPOSE 8501
 
-<<<<<<< HEAD
 ENTRYPOINT ["streamlit", "run", "src/app.py", "--server.port=8501", "--server.address=0.0.0.0", "--server.headless=true"]
-=======
-ENTRYPOINT ["streamlit", "run", "src/app.py", "--server.port=8501", "--server.address=0.0.0.0", "--server.headless=true"]
->>>>>>> ba0838bbbb968a3965fcf04cc3513c49ad0b0e3a
