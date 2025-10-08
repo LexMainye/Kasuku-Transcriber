@@ -40,7 +40,7 @@ def initialize_session_state():
     if 'show_welcome' not in st.session_state:
         st.session_state.show_welcome = True  # Show welcome initially
     if 'current_view' not in st.session_state:
-        st.session_state.current_view = 'home'  # 'home' or 'history'
+        st.session_state.current_view = 'Record Yourself'
     # Add state for current transcription result
     if 'current_transcription' not in st.session_state:
         st.session_state.current_transcription = None
@@ -49,8 +49,13 @@ def initialize_session_state():
     # Add state to track if user just logged in
     if 'first_login' not in st.session_state:
         st.session_state.first_login = True  # 'home' or 'history' 
+        
+    # --- NEW SESSION STATE VARIABLE ---
+    if 'tts_voice_gender' not in st.session_state:
+        st.session_state.tts_voice_gender = 'Female' # Default gender
+    # ----------------------------------
 
-# Update this section in your main_app() function in app.py
+# app.py
 
 def main_app():
     """Main application after login"""
@@ -83,7 +88,10 @@ def main_app():
     
     # Main recording interface
     with col2:
-        recorded_audio = st.audio_input(f"Record yourself in {selected_language}")
+        recorded_audio = st.audio_input(f"Record yourself in {selected_language}",
+                                        help="Click on the microphone button to start recording",
+                                        label_visibility="visible", 
+                                        width="stretch")
         
         audio_data = None
         sample_rate = None

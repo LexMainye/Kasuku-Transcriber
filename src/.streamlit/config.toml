@@ -1,12 +1,14 @@
 [theme]
-primaryColor = "#6A0DAD"      # Rich royal purple (main accent)
-backgroundColor = "#FAFAFA"   # Warm light gray (main background)
-secondaryBackgroundColor = "#F4F6F5"  # Slightly deeper gray for sidebars/cards
-textColor = "#1A1A1A"         # Deep charcoal for readability
+primaryColor = "#5A381E"      # Banana yellow (main accent)
+backgroundColor = "#FFEA99"   # Creamy pale yellow background
+secondaryBackgroundColor = "#FFF5C8"  # Slightly deeper banana cream for sidebars/cards
+textColor = "#3E2C23"         # Deep cocoa brown for readability
+font = "Space Grotesk"
 
 # Optional interactive colors
-linkColor = "#7B1FA2"         # Muted deep purple for links/buttons
-hoverColor = "#9C27B0"        # Brighter violet for hover/focus states
+linkColor = "#5A381E"         # Rich deep brown for links/buttons
+hoverColor = "#7B4A28"        # Warmer, slightly lighter brown for hover/focus states
+
 
 
 

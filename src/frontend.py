@@ -1,6 +1,6 @@
 import streamlit as st
 import random
-from backend import authenticate_user, filter_transcriptions, delete_transcription,copy_transcription,create_transcription_item
+from backend import authenticate_user, filter_transcriptions, delete_transcription,get_audio_base64, cleanup_temp_audio, text_to_speech_gtts
 
 def load_css():
     """Load custom CSS styling for the application"""
@@ -9,30 +9,69 @@ def load_css():
         /* Import Google Material Symbols */
         @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200');
         
-        /* Import Satoshi font */
-        @import url('https://api.fontshare.com/v2/css?f[]=satoshi@900,700,500,400&display=swap');
+        /* Import Space Grotesk font with proper weights */
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700;800&display=swap');
         
-        /* Apply Satoshi font to all text */
-        * {
-            font-family: 'Satoshi', sans-serif;
+        /* Apply Space Grotesk font to entire application */
+        html, body, [class*="css"] {
+            font-family: 'Space Grotesk', sans-serif !important;
         }
         
-        /* Title styling with Satoshi */
+        /* Base font settings */
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 400;
+            line-height: 1.4;
+        }
+        
+        /* Title styling with Space Grotesk */
         h1.kasuku-title {
-            font-family: 'Satoshi', sans-serif;
-            font-weight: 900;
-            font-size: 2.5rem;
+            font-family: 'Space Grotesk', sans-serif !important;
+            font-weight: 800 !important;
+            font-size: 2.5rem !important;
             text-align: center;
             color: #333;
             letter-spacing: -0.02em;
+            margin-bottom: 1rem !important;
         }
         
-        /* Updated Button styling with different colors for actions */
+        /* Headings with Space Grotesk */
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Space Grotesk', sans-serif !important;
+            font-weight: 700 !important;
+            letter-spacing: -0.01em;
+        }
+        
+        /* Streamlit specific elements */
+        .stMarkdown, .stText, .stAlert, .stExpander, .stContainer {
+            font-family: 'Space Grotesk', sans-serif !important;
+        }
+        
+        /* Input labels and text */
+        .stTextInput label, .stSelectbox label, .stTextArea label,
+        .stNumberInput label, .stDateInput label, .stTimeInput label {
+            font-family: 'Space Grotesk', sans-serif !important;
+            font-weight: 600 !important;
+            font-size: 1rem !important;
+        }
+        
+        /* Input fields */
+        .stTextInput input, .stSelectbox select, .stTextArea textarea {
+            font-family: 'Space Grotesk', sans-serif !important;
+            font-weight: 400 !important;
+        }
+        
+        /* Button styling with Space Grotesk */
+        .stButton > button {
+            font-family: 'Space Grotesk', sans-serif !important;
+            font-weight: 600 !important;
+            letter-spacing: -0.01em;
+        }
+        
+        /* Secondary button styling */
         .stButton > button[data-testid="baseButton-secondary"] {
-            font-family: 'Satoshi', sans-serif;
-            font-weight: 700;
             width: 100%;
-            background-color: #ff4b4b !important;  /* Red color for danger actions */
+            background-color: #ff4b4b !important;
             color: white !important;
             border: none;
             padding: 0.5rem 1rem;
@@ -47,353 +86,14 @@ def load_css():
             gap: 8px;
         }
         
-        /* Hover effect for danger buttons */
         .stButton > button[data-testid="baseButton-secondary"]:hover {
             background-color: #ff6b6b !important;
             box-shadow: 0 4px 8px rgba(0,0,0,0.2);
             transform: translateY(-1px);
         }
         
-        /* Primary button style (for Transcribe button) */
+        /* Primary button style */
         .stButton > button[data-testid="baseButton-primary"] {
-            font-family: 'Satoshi', sans-serif;
-            font-weight: 700;
-            width: 100%;
-            background-color: #81C784 !important;  /* Light green for primary actions */
-            color: white !important;
-            border: none;
-            padding: 0.5rem 1rem;
-            border-radius: 5px;
-            font-size: 1rem;
-            transition: all 0.3s ease;
-            margin: 0.5rem 0;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        
-        /* Hover effect for primary buttons */
-        .stButton > button[data-testid="baseButton-primary"]:hover {
-            background-color: #A5D6A7 !important;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-            transform: translateY(-1px);
-        }
-        
-        /* Copy button styling */
-        .copy-button {
-            background-color: #2196F3 !important;
-            color: white !important;
-            border: none !important;
-            border-radius: 20px !important;
-            padding: 0.3rem 0.8rem !important;
-            font-size: 0.8rem !important;
-            font-weight: 600 !important;
-            cursor: pointer !important;
-            transition: all 0.3s ease !important;
-            margin: 0.2rem !important;
-            display: inline-flex !important;
-            align-items: center !important;
-            gap: 4px !important;
-        }
-        
-        .copy-button:hover {
-            background-color: #1976D2 !important;
-            transform: translateY(-1px) !important;
-        }
-        
-        /* Delete button styling for individual items */
-        .delete-button {
-            background-color: #f44336 !important;
-            color: white !important;
-            border: none !important;
-            border-radius: 20px !important;
-            padding: 0.3rem 0.8rem !important;
-            font-size: 0.8rem !important;
-            font-weight: 600 !important;
-            cursor: pointer !important;
-            transition: all 0.3s ease !important;
-            margin: 0.2rem !important;
-            display: inline-flex !important;
-            align-items: center !important;
-            gap: 4px !important;
-        }
-        
-        .delete-button:hover {
-            background-color: #d32f2f !important;
-            transform: translateY(-1px) !important;
-        }
-        
-        /* Clear transcription button styling */
-        .clear-transcription-button {
-            background-color: #f44336 !important;
-            color: white !important;
-            border: none !important;
-            border-radius: 20px !important;
-            padding: 0.5rem 1rem !important;
-            font-size: 0.8rem !important;
-            font-weight: 600 !important;
-            cursor: pointer !important;
-            transition: all 0.3s ease !important;
-            margin: 0.2rem !important;
-            display: inline-flex !important;
-            align-items: center !important;
-            gap: 4px !important;
-            margin-left: 10px !important;
-        }
-        
-        .clear-transcription-button:hover {
-            background-color: #d32f2f !important;
-            transform: translateY(-1px) !important;
-        }
-        
-        /* Add spacing between buttons */
-        .stButton {
-            margin: 0.5rem 0;
-        }
-        
-        /* Remove green colors from other elements */
-        .main-header, .greeting-message, .info-box, .success-box,
-        .user-info, .scrollable-history, .chat-message {
-            border-color: #dee2e6;
-            background-color: #f8f9fa;
-            color: inherit;
-        }
-        
-        .chat-language {
-            color: #666;
-        }
-        
-        .stTextInput > div > div > input {
-            border-color: #dee2e6 !important;
-        }
-        
-        .stTextInput > div > div > input:focus {
-            box-shadow: 0 0 0 2px rgba(0,0,0,0.1) !important;
-            border-color: #666 !important;
-        }
-        
-        /* Apply Satoshi to specific elements */
-        .streamlit-expanderHeader,
-        .stTextInput label,
-        .stSelectbox label,
-        .stMarkdown,
-        .stText {
-            font-family: 'Satoshi', sans-serif !important;
-        }
-        
-        /* Language icon styling */
-        .language-icon {
-            font-family: 'Material Symbols Outlined';
-            font-size: 24px;
-            vertical-align: middle;
-            margin-right: 8px;
-        }
-        
-        /* Search icon styling */
-        .search-icon {
-            font-family: 'Material Symbols Outlined';
-            font-size: 24px;
-            vertical-align: middle;
-            margin-right: 8px;
-            color: #666;
-        }
-        
-        /* Container for search input with icon */
-        .search-container {
-            display: flex;
-            align-items: center;
-            margin-bottom: 1rem;
-        }
-        
-        /* Filter icon styling */
-        .filter-icon {
-            font-family: 'Material Symbols Outlined';
-            font-size: 24px;
-            vertical-align: middle;
-            margin-right: 8px;
-            color: #666;
-        }
-        
-        /* Container for filter with icon */
-        .filter-container {
-            display: flex;
-            align-items: center;
-            margin: 1rem 0;
-        }
-        
-        /* Updated delete icon styling */
-        .delete-container {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: -8px;  /* Adjust spacing */
-        }
-        
-        .material-symbols-outlined.delete-icon {
-            font-family: 'Material Symbols Outlined';
-            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-            font-size: 24px;
-            color: #ff4b4b;
-            vertical-align: middle;
-        }
-        
-        /* Material Symbols button styling */
-        .material-button {
-            display: inline-flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            gap: 8px !important;
-        }
-        
-        .material-button .material-symbols-outlined {
-            font-family: 'Material Symbols Outlined' !important;
-            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24 !important;
-            font-size: 20px !important;
-            line-height: 1 !important;
-        }
-        
-        /* Chat bubble styling with action buttons */
-        .chat-bubble {
-            background-color: white;
-            border-radius: 15px;
-            padding: 0.8rem;
-            margin: 0.5rem 0;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-            border-left: 3px solid #81C784;
-            transition: all 0.2s ease;
-            position: relative;
-        }
-        
-        .chat-bubble:hover {
-            box-shadow: 0 2px 4px rgba(0,0,0,0.15);
-            transform: translateX(2px);
-        }
-        
-        .chat-bubble .timestamp {
-            font-size: 0.7rem;
-            color: #666;
-            margin-bottom: 0.2rem;
-        }
-        
-        .chat-bubble .language-tag {
-            font-size: 0.8rem;
-            color: #81C784;
-            font-weight: 600;
-            margin-bottom: 0.3rem;
-        }
-        
-        .chat-bubble .message {
-            font-size: 0.9rem;
-            line-height: 1.4;
-            color: #333;
-            margin-bottom: 0.5rem;
-        }
-        
-        .chat-bubble .actions {
-            display: flex;
-            justify-content: flex-end;
-            gap: 0.5rem;
-            margin-top: 0.5rem;
-            padding-top: 0.5rem;
-            border-top: 1px solid #eee;
-        }
-        
-        /* Scrollable container styling */
-        .scrollable-history {
-            max-height: 400px;
-            overflow-y: auto;
-            padding-right: 10px;
-            margin: 1rem 0;
-        }
-        
-        /* Updated floating accessibility button */
-        .floating-button {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            z-index: 1000;
-            background-color: white;
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        
-        .floating-button[data-active="true"] {
-            background-color: #81C784;
-        }
-        
-        .floating-button[data-active="true"] .accessibility-icon {
-            color: white;
-        }
-        
-        .floating-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-        }
-        
-        .accessibility-icon {
-            font-family: 'Material Symbols Outlined';
-            font-size: 24px;
-            color: #333;
-            transition: color 0.3s ease;
-        }
-        
-        /* Screen reader tooltip */
-        .screen-reader-tooltip {
-            position: fixed;
-            bottom: 80px;
-            right: 20px;
-            background-color: white;
-            padding: 1rem;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-            z-index: 1000;
-            max-width: 300px;
-            display: none;
-            pointer-events: none;
-        }
-        
-        .floating-button:hover + .screen-reader-tooltip {
-            display: block;
-        }
-
-        /* Success message styling */
-        .success-message {
-            background-color: #d4edda;
-            color: #155724;
-            padding: 0.5rem;
-            border-radius: 5px;
-            border: 1px solid #c3e6cb;
-            margin: 0.5rem 0;
-            font-size: 0.9rem;
-        }
-        
-        /* Success box styling */
-        .success-box {
-            background-color: #f8f9fa;
-            border: 2px solid #81C784;
-            border-radius: 10px;
-            padding: 1.5rem;
-            margin: 1rem 0;
-        }
-        
-        /* Button container for transcription result */
-        .transcription-buttons {
-            display: flex;
-            justify-content: flex-start;
-            gap: 10px;
-            margin-top: 1rem;
-        }
-        /* Add these styles to your load_css() function */
-
-        /* Navigation button styling */
-        .stButton > button[data-testid="baseButton-primary"] {
-            font-family: 'Satoshi', sans-serif;
-            font-weight: 700;
             width: 100%;
             background-color: #81C784 !important;
             color: white !important;
@@ -402,187 +102,160 @@ def load_css():
             border-radius: 5px;
             font-size: 1rem;
             transition: all 0.3s ease;
-            margin: 0.25rem 0;
+            margin: 0.5rem 0;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
-
-        /* Transcription card styling */
-        .transcription-card {
-            background: white;
-            border-radius: 12px;
-            padding: 1rem;
-            margin: 0.5rem 0;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            border: 1px solid #e0e0e0;
-            transition: all 0.3s ease;
-            min-height: 180px;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .transcription-card:hover {
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            transform: translateY(-2px);
-            border-color: #81C784;
-        }
-
-        .card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 0.75rem;
-            padding-bottom: 0.5rem;
-            border-bottom: 1px solid #f0f0f0;
-        }
-
-        .card-language {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .card-flag {
-            font-size: 1.2rem;
-        }
-
-        .card-lang-text {
-            font-weight: 600;
-            color: #81C784;
-            font-size: 0.85rem;
-        }
-
-        .card-timestamp {
-            font-size: 0.7rem;
-            color: #666;
-            text-align: right;
-            line-height: 1.2;
-        }
-
-        .card-content {
-            flex: 1;
-            margin: 0.5rem 0;
-        }
-
-        .card-text {
-            font-size: 0.9rem;
-            line-height: 1.4;
-            color: #333;
-            margin: 0;
-            display: -webkit-box;
-            -webkit-line-clamp: 3;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
-
-        .card-actions {
-            display: flex;
-            justify-content: flex-end;
-            gap: 0.5rem;
-            margin-top: auto;
-            padding-top: 0.5rem;
-            border-top: 1px solid #f0f0f0;
-        }
-
-        .card-button {
-            background: #2196F3;
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 36px;
-            height: 36px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-        }
-
-        .card-button:hover {
+        
+        .stButton > button[data-testid="baseButton-primary"]:hover {
+            background-color: #A5D6A7 !important;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
             transform: translateY(-1px);
-            box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+        }
+        
+        /* Expanders */
+        .streamlit-expanderHeader {
+            font-family: 'Space Grotesk', sans-serif !important;
+            font-weight: 600 !important;
+            font-size: 1.1rem !important;
+        }
+        
+        .streamlit-expanderContent {
+            font-family: 'Space Grotesk', sans-serif !important;
+            font-weight: 400 !important;
+        }
+        
+        /* Sidebar styling */
+        [data-testid="stSidebar"] {
+            font-family: 'Space Grotesk', sans-serif !important;
+        }
+        
+        [data-testid="stSidebar"] .stMarkdown {
+            font-family: 'Space Grotesk', sans-serif !important;
+        }
+        
+        /* Chat messages and history */
+        .chat-bubble, .scrollable-history, .transcription-card {
+            font-family: 'Space Grotesk', sans-serif !important;
+        }
+        
+        .chat-bubble .timestamp {
+            font-family: 'Space Grotesk', sans-serif !important;
+            font-weight: 300 !important;
+        }
+        
+        .chat-bubble .language-tag {
+            font-family: 'Space Grotesk', sans-serif !important;
+            font-weight: 600 !important;
+        }
+        
+        .chat-bubble .message {
+            font-family: 'Space Grotesk', sans-serif !important;
+            font-weight: 400 !important;
+        }
+        
+        /* Transcription cards */
+        .transcription-card {
+            font-family: 'Space Grotesk', sans-serif !important;
+        }
+        
+        .card-lang-text {
+            font-family: 'Space Grotesk', sans-serif !important;
+            font-weight: 600 !important;
+        }
+        
+        .card-timestamp {
+            font-family: 'Space Grotesk', sans-serif !important;
+            font-weight: 300 !important;
+        }
+        
+        .card-text {
+            font-family: 'Space Grotesk', sans-serif !important;
+            font-weight: 400 !important;
+        }
+        
+        /* Success messages and alerts */
+        .success-message, .success-box, .stAlert {
+            font-family: 'Space Grotesk', sans-serif !important;
+        }
+        
+        /* Custom buttons */
+        .copy-button, .delete-button, .clear-transcription-button {
+            font-family: 'Space Grotesk', sans-serif !important;
+            font-weight: 600 !important;
+        }
+        
+        /* Material icons integration */
+        .material-button {
+            font-family: 'Space Grotesk', sans-serif !important;
+        }
+        
+        /* Footer and additional text */
+        .footer, .info-text, .help-text {
+            font-family: 'Space Grotesk', sans-serif !important;
+            font-weight: 300 !important;
+        }
+        
+        /* Table styling */
+        .stTable, .dataframe {
+            font-family: 'Space Grotesk', sans-serif !important;
+        }
+        
+        /* Progress bars and status elements */
+        .stProgress > div > div > div {
+            font-family: 'Space Grotesk', sans-serif !important;
+        }
+        
+        /* Radio buttons and checkboxes */
+        .stRadio > label, .stCheckbox > label {
+            font-family: 'Space Grotesk', sans-serif !important;
+            font-weight: 400 !important;
+        }
+        
+        /* File uploader */
+        .stFileUploader label {
+            font-family: 'Space Grotesk', sans-serif !important;
+            font-weight: 600 !important;
+        }
+        
+        /* Metric cards */
+        [data-testid="stMetricLabel"], [data-testid="stMetricValue"] {
+            font-family: 'Space Grotesk', sans-serif !important;
+        }
+        
+        [data-testid="stMetricLabel"] {
+            font-weight: 600 !important;
+        }
+        
+        [data-testid="stMetricValue"] {
+            font-weight: 700 !important;
         }
 
-        .copy-card-btn {
-            background: #2196F3;
-        }
-
-        .copy-card-btn:hover {
-            background: #1976D2;
-        }
-
-        .expand-card-btn {
-            background: #FF9800;
-        }
-
-        .expand-card-btn:hover {
-            background: #F57C00;
-        }
-
-        .delete-card-btn {
-            background: #f44336;
-        }
-
-        .delete-card-btn:hover {
-            background: #d32f2f;
-        }
-
-        .card-button .material-symbols-outlined {
-            font-size: 18px;
-            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-        }
-
-        .card-full-text {
-            margin-top: 0.75rem;
-            padding-top: 0.75rem;
-            border-top: 2px solid #81C784;
-            animation: slideDown 0.3s ease;
-        }
-
-        .full-text-content {
-            background: #f8f9fa;
-            padding: 0.75rem;
-            border-radius: 8px;
-            border-left: 3px solid #81C784;
-        }
-
-        .full-text-content p {
-            margin: 0;
-            font-size: 0.9rem;
-            line-height: 1.5;
-            color: #333;
-        }
-
-        @keyframes slideDown {
-            from {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        /* Grid responsive layout */
+        /* Enhanced responsive typography */
         @media (max-width: 768px) {
-            .transcription-card {
-                margin: 0.25rem 0;
-                min-height: 160px;
+            body {
+                font-size: 14px;
             }
             
-            .card-actions {
-                gap: 0.25rem;
+            h1.kasuku-title {
+                font-size: 2rem !important;
             }
             
-            .card-button {
-                width: 32px;
-                height: 32px;
+            .stButton > button {
+                font-size: 0.9rem !important;
             }
-            
-            .card-button .material-symbols-outlined {
-                font-size: 16px;
-            }
+        }
+
+        /* Improve readability with better line heights */
+        .stMarkdown p {
+            line-height: 1.6 !important;
+        }
+        
+        .chat-bubble .message {
+            line-height: 1.5 !important;
+        }
+        
+        .card-text {
+            line-height: 1.5 !important;
         }
 
     </style>
@@ -659,26 +332,209 @@ def clear_transcription_js():
     """
 
 def login_page():
-    """Display centered login page in main content area"""
+    """Enhanced login page with Space Grotesk and Material Icons"""
+    
+    # Apply comprehensive Space Grotesk styling with Material Icons
+    st.markdown("""
+    <style>
+        /* Import Space Grotesk and Material Icons */
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/icon?family=Material+Icons');
+        
+        /* Material Icons base styling */
+        .material-icons {
+            font-family: 'Material Icons';
+            font-weight: normal;
+            font-style: normal;
+            font-size: 24px;
+            line-height: 1;
+            letter-spacing: normal;
+            text-transform: none;
+            display: inline-block;
+            white-space: nowrap;
+            word-wrap: normal;
+            direction: ltr;
+            -webkit-font-feature-settings: 'liga';
+            -webkit-font-smoothing: antialiased;
+            vertical-align: middle;
+            margin-right: 8px;
+        }
+        
+        .material-icons.md-18 { font-size: 18px; }
+        .material-icons.md-20 { font-size: 20px; }
+        .material-icons.md-24 { font-size: 24px; }
+        .material-icons.md-28 { font-size: 28px; }
+        .material-icons.md-32 { font-size: 32px; }
+        
+        /* Apply to all elements in the login container */
+        .main .block-container {
+            font-family: 'Space Grotesk', sans-serif !important;
+        }
+        
+        .login-main-title {
+            font-family: 'Space Grotesk', sans-serif !important;
+            font-weight: 800 !important;
+            font-size: 2.5rem !important;
+            text-align: center;
+            color: #333;
+            letter-spacing: -0.02em;
+            margin-bottom: 0.5rem !important;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .login-subtitle {
+            font-family: 'Space Grotesk', sans-serif !important;
+            font-weight: 500 !important;
+            font-size: 1.2rem !important;
+            text-align: center;
+            color: #666;
+            margin-bottom: 2rem !important;
+        }
+        
+        .login-section-title {
+            font-family: 'Space Grotesk', sans-serif !important;
+            font-weight: 700 !important;
+            font-size: 1.5rem !important;
+            text-align: center;
+            margin: 1.5rem 0 !important;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        /* Style all text inputs with Material Icons in labels */
+        div[data-testid="stTextInput"] label {
+            font-family: 'Space Grotesk', sans-serif !important;
+            font-weight: 600 !important;
+            font-size: 1rem !important;
+            display: flex !important;
+            align-items: center !important;
+        }
+        
+        div[data-testid="stTextInput"] label .material-icons {
+            font-size: 20px !important;
+            margin-right: 6px !important;
+        }
+        
+        div[data-testid="stTextInput"] input {
+            font-family: 'Space Grotesk', sans-serif !important;
+            font-weight: 400 !important;
+            font-size: 1rem !important;
+        }
+        
+        /* Style buttons with Material Icons */
+        div[data-testid="stButton"] button {
+            font-family: 'Space Grotesk', sans-serif !important;
+            font-weight: 600 !important;
+            font-size: 1rem !important;
+            letter-spacing: -0.01em;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 8px !important;
+        }
+        
+        /* Style form elements */
+        .stForm {
+            font-family: 'Space Grotesk', sans-serif !important;
+        }
+        
+        /* Demo section styling with Material Icons */
+        .demo-section {
+            font-family: 'Space Grotesk', sans-serif !important;
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin-top: 2rem;
+            border-left: 4px solid #81C784;
+        }
+        
+        .demo-title {
+            font-family: 'Space Grotesk', sans-serif !important;
+            font-weight: 700 !important;
+            color: #333;
+            margin-bottom: 1rem !important;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .demo-credential {
+            font-family: 'Space Grotesk', sans-serif !important;
+            font-weight: 400 !important;
+            margin: 0.5rem 0;
+            padding: 0.3rem 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .demo-credential .material-icons {
+            font-size: 18px;
+            color: #666;
+        }
+        
+        /* Success/error messages */
+        .stAlert {
+            font-family: 'Space Grotesk', sans-serif !important;
+        }
+        
+        .stAlert .material-icons {
+            margin-right: 8px;
+        }
+        
+        /* Custom icon styling for labels */
+        .icon-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+    </style>
+    """, unsafe_allow_html=True)
+    
     # Create three columns with the middle one containing the login form
     col1, col2, col3 = st.columns([1, 2, 1])
     
     with col2:
-        # Centered title and subtitle
-        st.markdown("<h1 style='text-align: center;'>Kasuku Transcriber 🦜</h1>", unsafe_allow_html=True)
-        st.markdown("<h4 style='text-align: center;'>Speech Transcription for Non Standard Speech</h4>", unsafe_allow_html=True)
+        # Centered title and subtitle with Material Icons
+        st.markdown("""
+            <h1 class='login-main-title'>
+            Kasuku Transcriber 🦜
+            </h1>
+        """, unsafe_allow_html=True)
         
-        # Add some spacing
-        st.markdown("<br>", unsafe_allow_html=True)
+        st.markdown("<h4 class='login-subtitle'>Speech Transcription for Non Standard Speech</h4>", unsafe_allow_html=True)
+    
         
-        # Centered login header
-        st.markdown("<h3 style='text-align: center;'>Login</h3>", unsafe_allow_html=True)
-        
-        # Login form
-        with st.form("login_form"):
-            email = st.text_input("Email Address or Phone Number", placeholder="Enter your email or phone number")
-            password = st.text_input("Password", type="password", placeholder="Enter your password")
-            submit_button = st.form_submit_button("Sign In", use_container_width=True)
+        # Login form with Material Icons
+        with st.form("login_form", clear_on_submit=False):
+            # Custom label with Material Icon for email/phone
+            email = st.text_input(
+                "Email Address or Phone Number",
+                placeholder="Enter your email or phone number",
+                help="Enter your email address or phone number",
+                label_visibility="collapsed"  # Hide default label since we have custom one
+            )
+            
+            # Custom label with Material Icon for password
+            password = st.text_input(
+                "Password", 
+                type="password", 
+                placeholder="Enter your password",
+                help="Enter your  password",
+                label_visibility="collapsed"  # Hide default label
+            )
+            
+            submit_button = st.form_submit_button(
+                "Login",
+                icon=":material/login:",
+                type="primary", 
+                use_container_width=True
+            )
             
             if submit_button:
                 if email and password:
@@ -687,34 +543,54 @@ def login_page():
                         st.session_state.authenticated = True
                         st.session_state.user_name = user_name
                         st.session_state.user_email = email
-                        st.session_state.first_login = True  # Set first login flag
-                        st.success(f"Welcome, {user_name}!")
+                        st.session_state.first_login = True
+                        st.success(f"Welcome back, {user_name}!")
                         st.rerun()
                     else:
-                        st.error("Invalid email or password.")
+                        st.error("Invalid credentials. Please try again.")
                 else:
-                    st.error("Please enter both email and password.")
+                    st.error("Please enter proper credentials.")
         
-        # Add some spacing
-        st.markdown("<br>", unsafe_allow_html=True)
-        
-        # Demo credentials centered
-        st.markdown("<div style='text-align: center;'>", unsafe_allow_html=True)
-        st.markdown("---")
-        st.markdown("#### Demo Access")
-        st.markdown("**Email:** alex@kasuku.com")
-        st.markdown("**Password:** password")
-        st.markdown("**Phone:** +254712345678")
-        st.markdown("</div>", unsafe_allow_html=True)
+        # Demo credentials section with Material Icons
+        st.markdown("""
+        <div class='demo-section' style='background-color: #FFEA99;'>
+            <h4 class='demo-title'>
+                <span class="material-icons">badge</span>
+                Demo Credentials
+            </h4>
+            <p class='demo-credential'>
+                <span class="material-icons">email</span>
+                <strong>Email:</strong> alex@kasuku.com
+            </p>
+            <p class='demo-credential'>
+                <span class="material-icons">vpn_key</span>
+                <strong>Password:</strong> password
+            </p>
+            <p class='demo-credential'>
+                <span class="material-icons">phone</span>
+                <strong>Phone:</strong> +254712345678
+            </p>
+            <p style='font-family: Space Grotesk; font-size: 0.9rem; color: #666; margin-top: 1rem; display: flex; align-items: center; gap: 8px;'>
+                <span class="material-icons" style="font-size: 18px;">info</span>
+                Use these credentials to test the application features.
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+
+# Use this enhanced version
+if __name__ == "__main__":
+    login_page()
+
+# Add this updated section to your render_sidebar() function in frontend.py
 
 def render_sidebar():
-    """Render the sidebar with navigation and settings"""
+    """Render the sidebar with navigation and enhanced TTS settings"""
     with st.sidebar:
         st.markdown('<h1 class="kasuku-title"><span style="color: #000000;">Kasuku Transcriber</span> 🦜</h1>', unsafe_allow_html=True)
         
         st.markdown("##")
         
-        # New Transcirption Button with Google-style icon
+        # Navigation buttons (keep existing)
         if st.button(
             "Record Yourself",
             type="secondary" if st.session_state.current_view == 'Record Yourself' else "secondary",
@@ -725,7 +601,7 @@ def render_sidebar():
             st.session_state.current_view = 'Record Yourself'
             st.rerun()
         
-        # History Button
+        # History Button (keep existing)
         history_count = len(st.session_state.transcription_history)
         history_label = f"Saved Transcriptions ({history_count})" if history_count > 0 else "Saved Transcriptions"
         
@@ -741,7 +617,7 @@ def render_sidebar():
         
         st.markdown("##")
         
-        # Language selection (only show on home view)
+        # Language selection (keep existing)
         if st.session_state.current_view == 'Record Yourself':
             st.markdown("### :material/docs: Language to Transcribe")
             
@@ -758,13 +634,26 @@ def render_sidebar():
             )
             language_code = language_options[selected_language]
         else:
-            # Default values for history view
             selected_language = "English"
             language_code = "en"
         
         st.markdown("##")
         
-        # User info section
+        # --- SIMPLIFIED TEXT-TO-SPEECH SETTINGS ---
+        st.markdown("### :material/volume_up: Text-to-Speech Settings")
+        
+        # Voice Selection
+        st.selectbox(
+            "Select Voice",
+            options=["Female", "Male"],
+            index=0,
+            key="tts_voice_gender",
+            label_visibility="collapsed"
+        )
+        
+        st.markdown("##")
+        
+        # User info and logout (keep existing)
         st.markdown("### :material/info: User Info")
         st.markdown(f"""
         <div style="display: flex; align-items: center; gap: 8px;">
@@ -772,9 +661,13 @@ def render_sidebar():
             <span>{st.session_state.user_name}</span>
         </div>
         """, unsafe_allow_html=True)
+       
+        st.markdown("##")
         
-        if st.button("Logout", type="primary",icon=":material/logout:", use_container_width=True, key="sidebar_logout"):
-            for key in ['authenticated', 'user_name', 'user_email']:
+        if st.button("Logout", type="primary", icon=":material/logout:", use_container_width=True, key="sidebar_logout"):
+            for key in ['authenticated', 'user_name', 'user_email', 'current_transcription', 
+                       'current_transcription_language', 'current_audio_bytes', 'tts_voice_gender',
+                       'tts_speech_rate', 'tts_voice_pitch', 'tts_engine']:
                 if key in st.session_state:
                     del st.session_state[key]
             st.rerun()
@@ -1029,32 +922,33 @@ def render_history_grid():
     # Close the cards container
     st.markdown('</div>', unsafe_allow_html=True)
 
+# Updated render_transcription_card function for frontend.py
 def render_transcription_card(item, original_index):
-    """Render a single transcription card in vertical layout"""
+    """Render a single transcription card in vertical layout with Python TTS functionality"""
     # Determine language flag and color
     if item['language'] == "English":
         flag = "🇬🇧"
-        border_color = "#D22B2B"  # Red for English
+        border_color = "#E7440E"  # Blue for English
+        lang_code = "en"
     else:
         flag = "🇹🇿"
-        border_color = "#2196F3"  # Blue for Swahili
+        border_color = "#15D0E9"  # Red for Swahili
+        lang_code = "sw"
     
-    # Escape transcription for JavaScript
     transcription_text = item.get("transcription", "")
-    escaped_transcription = (
-        transcription_text.replace("'", "\\'")
-                          .replace('"', '\\"')
-                          .replace("`", "\\`")
-    )
     card_id = f"card_{original_index}"
     
+    # --- 1. GET THE SELECTED VOICE GENDER FROM SESSION STATE ---
+    selected_gender = st.session_state.get('tts_voice_gender', 'Female') # Defaults to Female
+    
+    # Display the card itself
     st.markdown(f"""
     <div id="{card_id}" class="transcription-card"
          style="border-left:4px solid {border_color};
                 border-radius:8px;
                 padding:16px;
                 margin-bottom:16px;
-                background:#fff;
+                background:#D3FF98;
                 box-shadow:0 2px 4px rgba(0,0,0,0.1);">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
             <div>
@@ -1069,79 +963,174 @@ def render_transcription_card(item, original_index):
     </div>
     """, unsafe_allow_html=True)
     
-    # Add JavaScript for card interactions
-    st.markdown(f"""
-    <script>
-        function copyCardText_{card_id}() {{
-            const text = `{escaped_transcription}`;
-            navigator.clipboard.writeText(text).then(function() {{
-                const button = document.querySelector('#{card_id} .copy-card-btn');
-                const icon = button.querySelector('.material-symbols-outlined');
-                const originalText = button.textContent;
-                
-                button.innerHTML = '<span class="material-symbols-outlined">check</span> Copied!';
-                button.style.backgroundColor = '#4CAF50';
-                
-                setTimeout(function() {{
-                    button.innerHTML = '<span class="material-symbols-outlined">content_copy</span> Copy';
-                    button.style.backgroundColor = '#2196F3';
-                }}, 2000);
-            }});
-        }}
-        
-        function deleteCard_{card_id}() {{
-            if (confirm('Are you sure you want to delete this transcription?')) {{
-                // Create a hidden Streamlit button to trigger the deletion
-                const deleteButton = document.createElement('button');
-                deleteButton.style.display = 'none';
-                deleteButton.id = 'delete_trigger_{card_id}';
-                document.body.appendChild(deleteButton);
-                
-                // Simulate a click to trigger Streamlit's callback
-                deleteButton.click();
-                
-                // Hide the card with animation
-                const card = document.getElementById('{card_id}');
-                card.style.opacity = '0.5';
-                card.style.transform = 'scale(0.95)';
-                card.style.transition = 'all 0.3s ease';
-                setTimeout(() => {{
-                    card.style.display = 'none';
-                }}, 300);
-            }}
-        }}
-        
-    </script>
-    """, unsafe_allow_html=True)
-    
-    # Add a hidden Streamlit button for actual copying & deletion
-    col1, col2, col3 = st.columns([1, 6, 1])  # Middle column is wider for spacing
+    # Add Streamlit buttons in columns: Speak, Copy, Delete
+    col1, col2, col3, _ = st.columns([1, 1, 1, 5])
+
+    # --- 2. TEXT-TO-SPEECH (TTS) BUTTON AND LOGIC ---
+    # Replace the Speak button section in render_transcription_card() with this:
 
     with col1:
-        if st.button("Copy ", key=f"copy_{original_index}",icon=":material/content_copy:", help="Copy this transcription"):
-            transcription_text = copy_transcription(original_index, st.session_state.transcription_history)
-            if transcription_text:
-                try:
-                    import pyperclip
-                    pyperclip.copy(transcription_text)
-                    st.success("Copied to clipboard!")
-                except ImportError:
-                    # Fallback to JavaScript method
-                    escaped_text = transcription_text.replace("'", "\\'").replace('"', '\\"').replace('`', '\\`')
-                    st.markdown(f"""
-                    <script>
-                        navigator.clipboard.writeText("{escaped_text}");
-                    </script>
-                    """, unsafe_allow_html=True)
-                    st.success("Copied to clipboard!")
-            else:
-                st.error("Transcription not found")
-            st.rerun()
+        if st.button("Speak", key=f"speak_{original_index}", icon=":material/volume_up:", 
+                    help="Speak this transcription"):
+            
+            with st.spinner("Generating high-quality speech..."):
+                from backend import text_to_speech_enhanced, get_audio_base64, cleanup_temp_audio
+                
+                # Get TTS settings from session state
+                selected_gender = st.session_state.get('tts_voice_gender', 'Female')
+                speech_rate = st.session_state.get('tts_speech_rate', 1.0)
+                voice_pitch = st.session_state.get('tts_voice_pitch', 1.0)
+                tts_engine = st.session_state.get('tts_engine', 'Chatterbox (High Quality)')
+                
+                # Determine if we should use Chatterbox
+                use_chatterbox = "Chatterbox" in tts_engine
+                
+                # Generate speech with enhanced settings
+                audio_path, engine_used = text_to_speech_enhanced(
+                    transcription_text,
+                    language=lang_code,
+                    gender=selected_gender.lower(),
+                    rate=speech_rate,
+                    pitch=voice_pitch,
+                    use_chatterbox=use_chatterbox
+                )
+                
+                if audio_path:
+                    # Convert to base64 for HTML audio player
+                    audio_base64 = get_audio_base64(audio_path)
+                    
+                    if audio_base64:
+                        # Determine audio format
+                        audio_format = "wav" if audio_path.endswith('.wav') else "mp3"
+                        
+                        # Create HTML audio player with controls
+                        st.markdown(f"""
+                        <div style="margin: 10px 0; padding: 10px; background: #f0f0f0; border-radius: 5px;">
+                            <audio controls autoplay style="width: 100%;">
+                                <source src="data:audio/{audio_format};base64,{audio_base64}" 
+                                        type="audio/{audio_format}">
+                                Your browser does not support the audio element.
+                            </audio>
+                            <p style="font-size: 0.75rem; color: #666; margin: 5px 0 0 0; text-align: center;">
+                                🎵 Using: <strong>{engine_used.upper()}</strong> | 
+                                Gender: {selected_gender} | 
+                                Rate: {speech_rate}x | 
+                                Pitch: {voice_pitch}x
+                            </p>
+                        </div>
+                        """, unsafe_allow_html=True)
+                        
+                        st.success("✓ Audio ready! Playing now...")
+                    else:
+                        st.error("Failed to process audio file")
+                    
+                    # Clean up temporary file
+                    cleanup_temp_audio(audio_path)
+                else:
+                    st.error("Failed to generate speech. Check your internet connection or TTS settings.")
 
-    with col3:  # Delete button in the rightmost column
-        if st.button("Delete", key=f"delete_{original_index}",icon=":material/delete_forever:", help="Delete this transcription"):
+    # --- 3. COPY-TO-CLIPBOARD BUTTON AND LOGIC ---
+    with col2:
+        if st.button("Copy", key=f"copy_{original_index}", icon=":material/content_copy:", help="Copy this transcription"):
+            escaped_text = transcription_text.replace("'", "\\'").replace('"', '\\"').replace('`', '\\`').replace('\n', '\\n')
+            
+            st.markdown(f"""
+            <script>
+                (function() {{
+                    const textToCopy = `{escaped_text}`;
+                    
+                    // Modern async clipboard API
+                    if (navigator.clipboard) {{
+                        navigator.clipboard.writeText(textToCopy).then(() => {{
+                            showCopyNotification();
+                        }}).catch(err => {{
+                            console.error('Async copy failed, falling back.', err);
+                            fallbackCopy(textToCopy);
+                        }});
+                    }} else {{
+                        // Fallback for older browsers
+                        fallbackCopy(textToCopy);
+                    }}
+                }})();
+
+                function fallbackCopy(text) {{
+                    const textArea = document.createElement('textarea');
+                    textArea.value = text;
+                    textArea.style.position = 'fixed'; // Avoid scrolling to bottom
+                    document.body.appendChild(textArea);
+                    textArea.focus();
+                    textArea.select();
+                    try {{
+                        const successful = document.execCommand('copy');
+                        if (successful) showCopyNotification();
+                    }} catch (err) {{
+                        console.error('Fallback copy failed', err);
+                    }}
+                    document.body.removeChild(textArea);
+                }}
+
+                function showCopyNotification() {{
+                    const notification = document.createElement('div');
+                    notification.innerHTML = '✓ Copied to clipboard!';
+                    notification.style.cssText = `
+                        position: fixed; top: 20px; right: 20px; background: #4CAF50; color: white;
+                        padding: 12px 20px; border-radius: 5px; z-index: 10000;
+                        font-family: 'Space Grotesk', sans-serif; font-weight: 500;
+                        box-shadow: 0 4px 12px rgba(0,0,0,0.15); opacity: 0;
+                        transition: opacity 0.3s ease;
+                    `;
+                    document.body.appendChild(notification);
+                    setTimeout(() => notification.style.opacity = '1', 10);
+                    setTimeout(() => {{
+                        notification.style.opacity = '0';
+                        setTimeout(() => notification.remove(), 300);
+                    }}, 2000);
+                }}
+            </script>
+            """, unsafe_allow_html=True)
+
+    with col3:
+        if st.button("Delete", key=f"delete_{original_index}", icon=":material/delete_forever:", help="Delete this transcription"):
             delete_transcription(original_index, st.session_state.transcription_history)
             st.rerun()
+
+
+
+
+# Optional: Add a utility function to stop all speech synthesis
+def stop_all_speech():
+    """Stop all currently playing TTS"""
+    st.markdown("""
+    <script>
+        if (typeof speechSynthesis !== 'undefined' && speechSynthesis.speaking) {
+            speechSynthesis.cancel();
+        }
+    </script>
+    """, unsafe_allow_html=True)
+
+
+# Optional: Add a utility function to stop all speech synthesis
+def stop_all_speech():
+    """Stop all currently playing TTS"""
+    st.markdown("""
+    <script>
+        if (typeof speechSynthesis !== 'undefined' && speechSynthesis.speaking) {
+            speechSynthesis.cancel();
+        }
+    </script>
+    """, unsafe_allow_html=True)
+
+
+# Optional: Add a utility function to stop all speech synthesis
+def stop_all_speech():
+    """Stop all currently playing TTS"""
+    st.markdown("""
+    <script>
+        if (window.speechSynthesis.speaking) {
+            window.speechSynthesis.cancel();
+        }
+    </script>
+    """, unsafe_allow_html=True)
     
 
 def render_main_interface(show_welcome=True):
@@ -1156,7 +1145,7 @@ def render_main_interface(show_welcome=True):
         if show_welcome:
             st.markdown(f"""
             <div style='text-align: center; padding: 1rem; margin-bottom: 2rem;'>
-                <h3>Hello {st.session_state.user_name} 👋</h3>
+                <h3> Hello {st.session_state.user_name} 👋 </h3>
             </div>
             """, unsafe_allow_html=True)
         else:
@@ -1166,26 +1155,115 @@ def render_main_interface(show_welcome=True):
     return col1, col2, col3
 
 def render_transcription_result(transcription, selected_language):
-    """Render the transcription result with copy, save, and discard functionality"""
+    """Render the transcription result with speak, copy, save, and discard functionality"""
     st.markdown("### Transcription Result")
     
-    # Display result in a styled container
-    st.markdown(f"""
-    <div class="success-box">
-        <strong>Transcribed Text ({selected_language}):</strong><br>
-        <p style="font-size: 1.2rem; margin-top: 0.5rem; font-weight: 500; color: #2d5016;">{transcription}</p>
-    </div>
-    """, unsafe_allow_html=True)
+    # Clean the transcription text - remove HTML tags if present
+    import re
+    import html
     
-    # Create three columns for action buttons
-    col1, col2, col3 = st.columns(3)
+    def clean_transcription_text(text):
+        if not text:
+            return ""
+        
+        # Remove HTML tags
+        clean_text = re.sub('<.*?>', '', text)
+        
+        # Decode HTML entities
+        clean_text = html.unescape(clean_text)
+        
+        # Remove extra whitespace and comments
+        clean_text = re.sub(r'<!--.*?-->', '', clean_text, flags=re.DOTALL)
+        clean_text = ' '.join(clean_text.split())
+        
+        return clean_text.strip()
+    
+    # Clean the transcription
+    clean_transcription = clean_transcription_text(transcription)
+    
+    # If still looks like HTML structure, try to extract meaningful content
+    if not clean_transcription or len(clean_transcription) < 5:
+        # Look for actual text content in the original
+        lines = str(transcription).split('\n')
+        for line in lines:
+            line = line.strip()
+            if (line and 
+                not line.startswith('<') and 
+                not line.startswith('<!--') and
+                not any(css_word in line.lower() for css_word in ['style=', 'color:', 'font-', 'margin:', 'padding:']) and
+                len(line) > 3):
+                clean_transcription = line
+                break
+    
+    # Final fallback
+    if not clean_transcription:
+        clean_transcription = "Error: Could not extract transcribed text"
+    
+    # Determine language code for TTS
+    lang_code = "sw" if selected_language == "Swahili" else "en"
+    
+    # Use Streamlit's success container instead of custom HTML
+    with st.container():
+        # Simple green border using CSS that definitely works
+        st.markdown(f"""
+        <div style="border: 2px solid #4CAF50; border-radius: 5px; padding: 20px; background-color: #D3FF98; margin: 10px 0;">
+            <h4 style="color: #1A1A1A; margin: 0 0 10px 0;"> Transcribed Text ({selected_language}):</h4>
+            <p style="font-size: 18px; color: #1A1A1A; margin: 0; font-weight: 500; line-height: 1.5;">{html.escape(clean_transcription)}</p>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    # Store clean transcription for buttons
+    st.session_state.clean_transcription_for_buttons = clean_transcription
+    
+    # Create four columns for action buttons: Speak, Copy, Save, Discard
+    col1, col2, col3, col4 = st.columns(4)
     
     # Initialize button states in session state if not exist
     if 'button_feedback' not in st.session_state:
         st.session_state.button_feedback = None
     
     with col1:
-        # Copy button
+        # Speak button
+        speak_clicked = st.button(
+            "Speak", 
+            icon=":material/volume_up:", 
+            use_container_width=True, 
+            key="speak_transcription_btn",
+            help="Speak transcription aloud"
+        )
+        
+        if speak_clicked:
+            if clean_transcription.strip():
+                with st.spinner("Generating speech..."):
+                    # Import Google TTS functions (make sure these are available in your backend.py)
+                    from backend import text_to_speech_gtts, get_audio_base64, cleanup_temp_audio
+                    
+                    # Generate TTS audio file using Google TTS
+                    audio_file_path = text_to_speech_gtts(clean_transcription, lang_code)
+                    
+                    if audio_file_path:
+                        # Convert to base64 for HTML audio player
+                        audio_base64 = get_audio_base64(audio_file_path)
+                        
+                        if audio_base64:
+                            # Create HTML audio player that auto-plays (hidden)
+                            st.markdown(f"""
+                            <audio autoplay style="display: none;">
+                                <source src="data:audio/mp3;base64,{audio_base64}" type="audio/mp3">
+                            </audio>
+                            """, unsafe_allow_html=True)
+                            st.success("Playing audio...")
+                        else:
+                            st.error("Failed to process audio file")
+                        
+                        # Clean up temporary file
+                        cleanup_temp_audio(audio_file_path)
+                    else:
+                        st.error("Failed to generate speech. Please check your internet connection.")
+            else:
+                st.warning("No text to speak")
+    
+    with col2:
         copy_clicked = st.button(
             "Copy", 
             icon=":material/content_copy:", 
@@ -1195,31 +1273,102 @@ def render_transcription_result(transcription, selected_language):
         )
         
         if copy_clicked:
-            # JavaScript to copy to clipboard
-            # Escape the transcription text outside the f-string to avoid backslash issues
-            escaped_text = transcription.replace('`', '\\`').replace("'", "\\'").replace('"', '\\"')
+            # Use JavaScript clipboard functionality with visual feedback
+            escaped_text = clean_transcription.replace("'", "\\'").replace('"', '\\"').replace('`', '\\`').replace('\n', '\\n')
+            
             st.markdown(f"""
             <script>
-                if (navigator.clipboard) {{
-                    navigator.clipboard.writeText(`{escaped_text}`).then(function() {{
-                        console.log('Text copied to clipboard');
-                    }});
-                }} else {{
-                    // Fallback for older browsers
-                    var textArea = document.createElement("textarea");
-                    textArea.value = `{escaped_text}`;
+                function copyTranscriptionText() {{
+                    const text = `{escaped_text}`;
+                    
+                    if (navigator.clipboard) {{
+                        // Modern clipboard API
+                        navigator.clipboard.writeText(text).then(function() {{
+                            showCopySuccessTranscription();
+                        }}).catch(function(err) {{
+                            console.error('Copy failed:', err);
+                            fallbackCopyTranscription(text);
+                        }});
+                    }} else {{
+                        // Fallback for older browsers
+                        fallbackCopyTranscription(text);
+                    }}
+                }}
+                
+                function fallbackCopyTranscription(text) {{
+                    const textArea = document.createElement('textarea');
+                    textArea.value = text;
+                    textArea.style.position = 'fixed';
+                    textArea.style.top = '0';
+                    textArea.style.left = '0';
+                    textArea.style.width = '2em';
+                    textArea.style.height = '2em';
+                    textArea.style.padding = '0';
+                    textArea.style.border = 'none';
+                    textArea.style.outline = 'none';
+                    textArea.style.boxShadow = 'none';
+                    textArea.style.background = 'transparent';
+                    
                     document.body.appendChild(textArea);
+                    textArea.focus();
                     textArea.select();
-                    document.execCommand('copy');
+                    
+                    try {{
+                        const successful = document.execCommand('copy');
+                        if (successful) {{
+                            showCopySuccessTranscription();
+                        }}
+                    }} catch (err) {{
+                        console.error('Fallback copy failed:', err);
+                    }}
+                    
                     document.body.removeChild(textArea);
                 }}
+                
+                function showCopySuccessTranscription() {{
+                    // Show temporary notification
+                    const notification = document.createElement('div');
+                    notification.innerHTML = '✓ Copied to clipboard!';
+                    notification.style.cssText = `
+                        position: fixed;
+                        top: 20px;
+                        right: 20px;
+                        background: #4CAF50;
+                        color: white;
+                        padding: 12px 20px;
+                        border-radius: 5px;
+                        z-index: 10000;
+                        font-family: 'Space Grotesk', sans-serif;
+                        font-weight: 500;
+                        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                        opacity: 0;
+                        transition: opacity 0.3s ease;
+                    `;
+                    
+                    document.body.appendChild(notification);
+                    
+                    // Animate in
+                    setTimeout(() => {{
+                        notification.style.opacity = '1';
+                    }}, 10);
+                    
+                    // Remove after 2 seconds
+                    setTimeout(() => {{
+                        notification.style.opacity = '0';
+                        setTimeout(() => {{
+                            if (notification.parentNode) {{
+                                notification.parentNode.removeChild(notification);
+                            }}
+                        }}, 300);
+                    }}, 2000);
+                }}
+                
+                // Execute copy function
+                copyTranscriptionText();
             </script>
             """, unsafe_allow_html=True)
-            
-            st.session_state.button_feedback = "copied"
-            st.rerun()
     
-    with col2:
+    with col3:
         # Save button
         save_clicked = st.button(
             "Save", 
@@ -1228,30 +1377,29 @@ def render_transcription_result(transcription, selected_language):
             key="save_transcription_btn",
             help="Save transcription"
         )
-        
+
         if save_clicked:
             # Create and save transcription item
             from backend import create_transcription_item
-            
+
             transcription_item = create_transcription_item(
-                transcription,
+                clean_transcription,
                 selected_language,
                 st.session_state.user_name
             )
-            
+
             # Add to history
             st.session_state.transcription_history.append(transcription_item)
-            
+
             # Clear current transcription from display
             st.session_state.current_transcription = None
             st.session_state.current_transcription_language = None
-            
+
             # Set feedback state
             st.session_state.button_feedback = "saved"
             st.rerun()
     
-    with col3:
-        # Discard button
+    with col4:
         discard_clicked = st.button(
             "Discard", 
             icon=":material/delete_forever:", 
@@ -1261,11 +1409,8 @@ def render_transcription_result(transcription, selected_language):
         )
         
         if discard_clicked:
-            # Clear current transcription from display
             st.session_state.current_transcription = None
             st.session_state.current_transcription_language = None
-            
-            # Set feedback state
             st.session_state.button_feedback = "discarded"
             st.rerun()
 
@@ -1288,22 +1433,4 @@ def handle_transcription_actions():
         st.session_state.button_feedback = None
         st.session_state.feedback_clear_time = None
 
-
-def handle_transcription_actions():
-    """Helper function to handle transcription actions in the main app flow"""
-    # This can be called in your main app flow to ensure proper state management
-    
-    # Clear any lingering feedback messages after a delay
-    if 'feedback_clear_time' not in st.session_state:
-        st.session_state.feedback_clear_time = None
-    
-    # Auto-clear feedback after some time
-    import time
-    current_time = time.time()
-    
-    if (st.session_state.get('button_feedback') and 
-        st.session_state.feedback_clear_time and 
-        current_time - st.session_state.feedback_clear_time > 3):
-        st.session_state.button_feedback = None
-        st.session_state.feedback_clear_time = None
 

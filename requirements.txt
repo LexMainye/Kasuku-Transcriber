@@ -1,18 +1,18 @@
 # Core Streamlit and ML dependencies for Hugging Face Spaces
 streamlit
-torch
+torch>=2.0.0
 torchvision
 torchaudio
 transformers
 
 # Audio processing
-librosa
-soundfile
+librosa>=0.10.0
+soundfile>=0.12.0
+pydub
 
 # Data handling and visualization
 numpy<2
 pandas
-plotly
 
 # Additional dependencies for audio processing
 scipy
@@ -25,3 +25,7 @@ huggingface_hub
 
 # Clipboard support
 pyperclip
+
+# Text-to-Speech support
+gtts
+chatterbox-tts
