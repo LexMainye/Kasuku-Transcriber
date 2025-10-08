@@ -28,4 +28,8 @@ pyperclip
 
 # Text-to-Speech support
 gtts
+<<<<<<< HEAD
 chatterbox-tts
+=======
+chatterbox-tts
+>>>>>>> ba0838bbbb968a3965fcf04cc3513c49ad0b0e3a
