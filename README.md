@@ -50,15 +50,17 @@ A simple and powerful speech transcription application designed for non-standard
 # 🌍 Supported Languages
 Currently supports transcription for:
 
-* English 🇬🇧 : Using [open ai/whisper small](https://huggingface.co/openai/whisper-small) -> Currently fine-tunning 
-* Swahili 🇹🇿 : Using fine-tuned [smainye/sw_cv_tune_whisper_tiny_best_model](https://huggingface.co/smainye/sw_cv_tune_whisper_tiny_best_model) -> Currently fine-tunning
+* English 🇬🇧 : Using cdli/whisper-small_finetuned_kenyan_english_nonstandard_speech_v0.9 model
+* Swahili 🇹🇿 : Using cdli/whisper-small-Swahili_finetuned_small_CV20 model
 
 # 🎯 Key Benefits
 
 * Accessibility: Designed specifically for non-standard speech patterns
 * User-Friendly: Simple interface that anyone can use
 * Organized: Keep all your transcriptions in one place with timestamps
-* Flexible: Bilingual language support 🇬🇧 🇹🇿
+* Flexible: Bilingual language support for English and Swahili
+
+
 
 
 
