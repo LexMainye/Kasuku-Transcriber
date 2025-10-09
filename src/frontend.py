@@ -927,12 +927,12 @@ def render_transcription_card(item, original_index):
     """Render a single transcription card in vertical layout with Python TTS functionality"""
     # Determine language flag and color
     if item['language'] == "English":
-        flag = "🇬🇧"
-        border_color = "#E7440E"  # Blue for English
+        #flag = "🇬🇧"
+        border_color = "#E7440E"  # red for English
         lang_code = "en"
     else:
-        flag = "🇹🇿"
-        border_color = "#15D0E9"  # Red for Swahili
+        #flag = "🇹🇿"
+        border_color = "#15D0E9"  # blue for Swahili
         lang_code = "sw"
     
     transcription_text = item.get("transcription", "")
@@ -952,7 +952,7 @@ def render_transcription_card(item, original_index):
                 box-shadow:0 2px 4px rgba(0,0,0,0.1);">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
             <div>
-                <span style="font-size:1.2rem;">{flag}</span>
+                <span style="font-size:1.2rem;"> </span>
                 <span style="font-weight:bold;margin-left:4px;">{item.get('language','')}</span>
             </div>
             <div style="font-size:0.8rem;color:#777;">{item.get('timestamp','')}</div>
