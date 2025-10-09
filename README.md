@@ -47,11 +47,11 @@ A simple and powerful speech transcription application designed for non-standard
 * Filter: Filter transcriptions by language
 * Delete: Remove unwanted transcriptions
 
-# 🌍 Supported Languages
+# 💬 Supported Languages 
 Currently supports transcription for:
 
-* English 🇬🇧 : Using cdli/whisper-small_finetuned_kenyan_english_nonstandard_speech_v0.9 model
-* Swahili 🇹🇿 : Using cdli/whisper-small-Swahili_finetuned_small_CV20 model
+* English : Using cdli/whisper-small_finetuned_kenyan_english_nonstandard_speech_v0.9 model
+* Swahili : Using cdli/whisper-small-Swahili_finetuned_small_CV20 model
 
 # 🎯 Key Benefits
 
