@@ -1,4 +1,7 @@
 # Kasuku Transcriber 🦜
+
+![In Progress](https://img.shields.io/badge/Status-In%20Progress-green?style=for-the-badge&logo=wrench&logoColor=white)
+
 An ASR project for non standard Kenyan speech that uses finetunned whisper models to understand non standard Kenyan speech 
 A simple and powerful speech transcription application designed for non-standard speech patterns. Kasuku Transcriber helps you convert audio recordings into text with support for English and Swahili.
 
@@ -71,9 +74,7 @@ Currently supports transcription for:
 * Organized: Keep all your transcriptions in one place with timestamps
 * Flexible: Bilingual language support for English and Swahili
 
-
-
-
+---
 
 # 📥 Clone This Repository
 
@@ -121,5 +122,16 @@ Follow these steps to set up the project on your local machine:
 
 * Modern web browser with microphone support
 * Microphone access permissions
+
+---
+
+## Contact Details
+
+For any questions or feedback, please feel free to reach out:
+
+[![Email](https://img.shields.io/badge/-Email-D14836?style=flat-square&logo=gmail&logoColor=white)](mailto:sheldonmainye@gmail.com)
+[![LinkedIn](https://img.shields.io/badge/-LinkedIn-0A66C2?style=flat-square&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/alexander-mainye-745283148/)
+[![Signal](https://img.shields.io/badge/-Signal-3A76F0?style=flat-square&logo=signal&logoColor=white)](https://signal.me/#u/[Lex.71])
+[![X](https://img.shields.io/badge/-X-000000?style=flat-square&logo=x&logoColor=white)](https://x.com/Alekii_111)
 
 
