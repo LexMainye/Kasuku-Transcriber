@@ -16,3 +16,4 @@ accelerate
 huggingface_hub
 pyperclip
 gtts
+TTS>=0.22.0  # Coqui TTS for high-quality offline voice

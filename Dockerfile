@@ -1,51 +1,61 @@
-# Stage 1: Builder
-FROM python:3.11-slim as builder
-
-WORKDIR /app
-
-RUN apt-get update && apt-get install -y \
-    build-essential \
-    curl \
-    && rm -rf /var/lib/apt/lists/* \
-    && apt-get clean
-
-COPY requirements.txt .
-
-# Install only what's absolutely necessary
-RUN pip install --user --no-cache-dir \
-    streamlit==1.28.0 \
-    torch==2.0.1+cpu \
-    torchaudio==2.0.2+cpu \
-    transformers==4.35.0 \
-    librosa==0.10.1 \
-    numpy==1.24.3
-
-# Stage 2: Runtime  
+# Dockerfile for Kasuku Transcriber
 FROM python:3.11-slim
 
+# Set working directory
 WORKDIR /app
 
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
+    git \
     ffmpeg \
     libsndfile1 \
-    && rm -rf /var/lib/apt/lists/* \
-    && apt-get clean \
-    && apt-get autoremove -y
+    libsndfile1-dev \
+    build-essential \
+    wget \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
 
-COPY --from=builder /root/.local /root/.local
+# Copy requirements first for better caching
+COPY requirements.txt .
+
+# Install Python dependencies
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy source code
 COPY src/ ./src/
+COPY config.toml ./.streamlit/config.toml
 
-ENV PATH=/root/.local/bin:$PATH
+# Create necessary directories
+RUN mkdir -p /root/.cache/huggingface \
+    && mkdir -p /root/.cache/tts \
+    && mkdir -p .streamlit
+
+# Set environment variables
+ENV STREAMLIT_SERVER_PORT=8501
+ENV STREAMLIT_SERVER_HEADLESS=true
+ENV STREAMLIT_BROWSER_GATHER_USAGE_STATS=false
+ENV STREAMLIT_SERVER_FILE_WATCHER_TYPE=none
+ENV STREAMLIT_SERVER_ENABLE_STATIC_SERVING=true
+ENV TRANSFORMERS_CACHE=/root/.cache/huggingface
+ENV HF_HOME=/root/.cache/huggingface
+ENV COQUI_TTS_CACHE=/root/.cache/tts
+ENV TTS_HOME=/root/.cache/tts
 ENV PYTHONPATH=/app/src
-ENV TRANSFORMERS_CACHE=/tmp/transformers_cache
 
-# Remove unnecessary files
-RUN find /usr/local -name '*.pyc' -delete && \
-    find /usr/local -name '__pycache__' -delete
-
-RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
-USER appuser
-
+# Expose port
 EXPOSE 8501
 
-ENTRYPOINT ["streamlit", "run", "src/app.py", "--server.port=8501", "--server.address=0.0.0.0", "--server.headless=true"]
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8501/healthz || exit 1
+
+# Run the application
+CMD ["streamlit", "run", "src/app.py", \
+    "--server.port=8501", \
+    "--server.address=0.0.0.0", \
+    "--server.headless=true", \
+    "--server.enableCORS=false", \
+    "--server.enableXsrfProtection=false", \
+    "--browser.gatherUsageStats=false", \
+    "--server.fileWatcherType=none", \
+    "--server.maxUploadSize=200"]

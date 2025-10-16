@@ -359,31 +359,50 @@ def save_transcription_to_history(transcription, selected_language, user_name, t
     transcription_history.append(transcription_item)
     return transcription_history
 
+# TTS Implementation using Coqui TTS (replaces chatterbox)
 try:
-    from chatterbox import Chatterbox
-    CHATTERBOX_AVAILABLE = True
+    from TTS.api import TTS
+    TTS_AVAILABLE = True
 except ImportError:
-    CHATTERBOX_AVAILABLE = False
-    print("Chatterbox not installed. Install with: pip install chatterbox-tts")
+    TTS_AVAILABLE = False
+    print("Coqui TTS not installed. Install with: pip install TTS")
 
-# Initialize Chatterbox (add this near other initialization code)
+try:
+    from gtts import gTTS
+    GTTS_AVAILABLE = True
+except ImportError:
+    GTTS_AVAILABLE = False
+    print("gTTS not installed. Install with: pip install gtts")
+
+# Initialize Coqui TTS with caching
 @st.cache_resource
-def initialize_chatterbox():
-    """Initialize Chatterbox TTS engine with caching"""
-    if not CHATTERBOX_AVAILABLE:
+def initialize_tts_engine():
+    """Initialize Coqui TTS engine with caching for fast reuse"""
+    if not TTS_AVAILABLE:
         return None
     
     try:
-        tts_engine = Chatterbox()
-        return tts_engine
+        # Use a lightweight, multilingual model
+        # This model supports both English and Swahili
+        tts = TTS(model_name="tts_models/multilingual/multi-dataset/xtts_v2", 
+                  progress_bar=False, 
+                  gpu=True)  # Use GPU if available
+        return tts
     except Exception as e:
-        print(f"Failed to initialize Chatterbox: {str(e)}")
-        return None
+        print(f"Failed to initialize Coqui TTS: {str(e)}")
+        # Fallback to a simpler English-only model
+        try:
+            tts = TTS(model_name="tts_models/en/ljspeech/tacotron2-DDC", 
+                     progress_bar=False,
+                     gpu=True)
+            return tts
+        except:
+            return None
 
 
-def text_to_speech_chatterbox(text, language="en", gender="female", rate=1.0, pitch=1.0):
+def text_to_speech_coqui(text, language="en", gender="female", rate=1.0, pitch=1.0):
     """
-    Convert text to speech using Chatterbox TTS (offline, high quality)
+    Convert text to speech using Coqui TTS (high quality, offline)
     
     Args:
         text (str): Text to convert to speech
@@ -395,47 +414,94 @@ def text_to_speech_chatterbox(text, language="en", gender="female", rate=1.0, pi
     Returns:
         str: Path to the generated audio file, or None if failed
     """
-    if not CHATTERBOX_AVAILABLE:
-        print("Chatterbox not available, falling back to gTTS")
+    if not TTS_AVAILABLE:
+        print("Coqui TTS not available, falling back to gTTS")
         return text_to_speech_gtts(text, language)
     
     try:
-        tts_engine = initialize_chatterbox()
+        tts_engine = initialize_tts_engine()
         
         if tts_engine is None:
-            print("Failed to initialize Chatterbox")
+            print("Failed to initialize Coqui TTS engine")
             return text_to_speech_gtts(text, language)
         
         # Create temporary file for audio
         with tempfile.NamedTemporaryFile(delete=False, suffix='.wav') as temp_file:
             temp_path = temp_file.name
         
-        # Configure voice settings
-        voice_config = {
-            'language': language,
-            'gender': gender.lower(),
-            'rate': rate,
-            'pitch': pitch
+        # Map language codes
+        lang_map = {
+            "en": "en",
+            "sw": "sw"  # Swahili
         }
+        tts_language = lang_map.get(language, "en")
         
-        # Generate speech
-        tts_engine.speak(
+        # Generate speech with Coqui TTS
+        # Note: The XTTS v2 model supports speaker control
+        tts_engine.tts_to_file(
             text=text,
-            output_path=temp_path,
-            **voice_config
+            file_path=temp_path,
+            language=tts_language,
+            speed=rate
         )
+        
+        # Apply pitch adjustment if needed (using pydub)
+        if pitch != 1.0:
+            temp_path = adjust_pitch(temp_path, pitch)
         
         return temp_path
         
     except Exception as e:
-        print(f"Chatterbox TTS Error: {str(e)}")
+        print(f"Coqui TTS Error: {str(e)}")
         # Fallback to gTTS
         return text_to_speech_gtts(text, language)
 
 
-def text_to_speech_enhanced(text, language="en", gender="female", rate=1.0, pitch=1.0, use_chatterbox=True):
+def adjust_pitch(audio_path, pitch_factor):
     """
-    Enhanced TTS with automatic fallback between Chatterbox and gTTS
+    Adjust pitch of audio file using pydub
+    
+    Args:
+        audio_path (str): Path to audio file
+        pitch_factor (float): Pitch adjustment factor (1.0 = no change)
+    
+    Returns:
+        str: Path to adjusted audio file
+    """
+    try:
+        from pydub import AudioSegment
+        from pydub.playback import play
+        
+        # Load audio
+        audio = AudioSegment.from_file(audio_path)
+        
+        # Adjust pitch by changing sample rate
+        # Higher sample rate = higher pitch
+        new_sample_rate = int(audio.frame_rate * pitch_factor)
+        
+        # Create new audio with adjusted pitch
+        pitched_audio = audio._spawn(audio.raw_data, overrides={
+            "frame_rate": new_sample_rate
+        })
+        pitched_audio = pitched_audio.set_frame_rate(audio.frame_rate)
+        
+        # Save to new file
+        output_path = audio_path.replace('.wav', '_pitched.wav')
+        pitched_audio.export(output_path, format="wav")
+        
+        # Clean up original file
+        cleanup_temp_audio(audio_path)
+        
+        return output_path
+        
+    except Exception as e:
+        print(f"Pitch adjustment error: {str(e)}")
+        return audio_path  # Return original if adjustment fails
+
+
+def text_to_speech_enhanced(text, language="en", gender="female", rate=1.0, pitch=1.0, use_coqui=True):
+    """
+    Enhanced TTS with automatic fallback between Coqui TTS and gTTS
     
     Args:
         text (str): Text to convert to speech
@@ -443,15 +509,15 @@ def text_to_speech_enhanced(text, language="en", gender="female", rate=1.0, pitc
         gender (str): Voice gender ('female' or 'male')
         rate (float): Speech rate (0.5 to 2.0)
         pitch (float): Voice pitch (0.5 to 2.0)
-        use_chatterbox (bool): Try Chatterbox first if available
+        use_coqui (bool): Try Coqui TTS first if available
     
     Returns:
         tuple: (audio_file_path, tts_engine_used) or (None, None) if failed
     """
-    if use_chatterbox and CHATTERBOX_AVAILABLE:
-        audio_path = text_to_speech_chatterbox(text, language, gender, rate, pitch)
+    if use_coqui and TTS_AVAILABLE:
+        audio_path = text_to_speech_coqui(text, language, gender, rate, pitch)
         if audio_path:
-            return audio_path, "chatterbox"
+            return audio_path, "coqui"
     
     # Fallback to gTTS
     audio_path = text_to_speech_gtts(text, language)
@@ -468,34 +534,82 @@ def get_available_voices():
     Returns:
         dict: Available voices organized by language and gender
     """
-    if CHATTERBOX_AVAILABLE:
-        try:
-            tts_engine = initialize_chatterbox()
-            if tts_engine:
-                return {
-                    "English": {
-                        "female": ["Emma", "Olivia", "Ava"],
-                        "male": ["James", "Noah", "Liam"]
-                    },
-                    "Swahili": {
-                        "female": ["Amani", "Zuri", "Nia"],
-                        "male": ["Jabari", "Kazi", "Rafiki"]
-                    }
-                }
-        except:
-            pass
+    if TTS_AVAILABLE:
+        return {
+            "English": {
+                "female": ["Emma (Neural)", "Aria (Neural)", "Jenny (Neural)"],
+                "male": ["Guy (Neural)", "Davis (Neural)", "Tony (Neural)"]
+            },
+            "Swahili": {
+                "female": ["Amani (Neural)", "Zuri (Neural)"],
+                "male": ["Jabari (Neural)", "Kazi (Neural)"]
+            }
+        }
     
     # Fallback voice list for gTTS
     return {
         "English": {
-            "female": ["Default Female"],
-            "male": ["Default Male"]
+            "female": ["Default Female (gTTS)"],
+            "male": ["Default Male (gTTS)"]
         },
         "Swahili": {
-            "female": ["Default Female"],
-            "male": ["Default Male"]
+            "female": ["Default Female (gTTS)"],
+            "male": ["Default Male (gTTS)"]
         }
     }
+
+
+def text_to_speech_gtts(text, language="en"):
+    """
+    Convert text to speech using Google TTS (requires internet connection)
+    Fallback option when Coqui TTS is not available
+    
+    Args:
+        text (str): Text to convert to speech
+        language (str): Language code ('en' for English, 'sw' for Swahili)
+    
+    Returns:
+        str: Path to the generated audio file, or None if failed
+    """
+    if not GTTS_AVAILABLE:
+        print("gTTS not installed. Install with: pip install gtts")
+        return None
+    
+    try:
+        # Create temporary file for audio
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.mp3') as temp_file:
+            temp_path = temp_file.name
+        
+        # Generate TTS
+        tts = gTTS(text=text, lang=language, slow=False)
+        tts.save(temp_path)
+        
+        return temp_path
+        
+    except Exception as e:
+        print(f"gTTS Error: {str(e)}")
+        return None
+
+
+def get_audio_base64(file_path):
+    """Convert audio file to base64 for HTML audio player"""
+    try:
+        with open(file_path, "rb") as audio_file:
+            audio_bytes = audio_file.read()
+        audio_base64 = base64.b64encode(audio_bytes).decode()
+        return audio_base64
+    except Exception as e:
+        print(f"Audio encoding error: {str(e)}")
+        return None
+
+
+def cleanup_temp_audio(file_path):
+    """Clean up temporary audio file"""
+    try:
+        if file_path and os.path.exists(file_path):
+            os.unlink(file_path)
+    except Exception as e:
+        print(f"Cleanup error: {str(e)}")
 
 
 def convert_audio_format(input_path, output_format='mp3'):
@@ -539,93 +653,16 @@ def preload_tts_cache(common_phrases, language="en"):
         common_phrases (list): List of common phrases to preload
         language (str): Language code
     """
-    if not CHATTERBOX_AVAILABLE:
+    if not TTS_AVAILABLE:
         return
     
     try:
-        tts_engine = initialize_chatterbox()
+        tts_engine = initialize_tts_engine()
         if tts_engine:
             for phrase in common_phrases:
                 # Generate and cache
-                temp_path = text_to_speech_chatterbox(phrase, language)
+                temp_path = text_to_speech_coqui(phrase, language)
                 if temp_path:
                     cleanup_temp_audio(temp_path)
     except Exception as e:
         print(f"TTS preload error: {str(e)}")
-
-
-# Keep existing gTTS function as fallback
-def text_to_speech_gtts(text, language="en"):
-    """
-    Convert text to speech using Google TTS (requires internet connection)
-    Fallback option when Chatterbox is not available
-    """
-    try:
-        from gtts import gTTS
-        import tempfile
-        
-        with tempfile.NamedTemporaryFile(delete=False, suffix='.mp3') as temp_file:
-            temp_path = temp_file.name
-        
-        tts = gTTS(text=text, lang=language, slow=False)
-        tts.save(temp_path)
-        
-        return temp_path
-        
-    except ImportError:
-        print("gTTS not installed. Install with: pip install gtts")
-        return None
-    except Exception as e:
-        print(f"gTTS Error: {str(e)}")
-        return None
-def text_to_speech_gtts(text, language="en"):
-    """
-    Convert text to speech using Google TTS (requires internet connection)
-    
-    Args:
-        text (str): Text to convert to speech
-        language (str): Language code ('en' for English, 'sw' for Swahili)
-    
-    Returns:
-        str: Path to the generated audio file, or None if failed
-    """
-    try:
-        from gtts import gTTS
-        import tempfile
-        
-        # Create temporary file for audio
-        with tempfile.NamedTemporaryFile(delete=False, suffix='.mp3') as temp_file:
-            temp_path = temp_file.name
-        
-        # Generate TTS
-        tts = gTTS(text=text, lang=language, slow=False)
-        tts.save(temp_path)
-        
-        return temp_path
-        
-    except ImportError:
-        print("gTTS not installed. Install with: pip install gtts")
-        return None
-    except Exception as e:
-        print(f"gTTS Error: {str(e)}")
-        return None
-
-def get_audio_base64(file_path):
-    """Convert audio file to base64 for HTML audio player"""
-    try:
-        with open(file_path, "rb") as audio_file:
-            audio_bytes = audio_file.read()
-        audio_base64 = base64.b64encode(audio_bytes).decode()
-        return audio_base64
-    except Exception as e:
-        print(f"Audio encoding error: {str(e)}")
-        return None
-
-def cleanup_temp_audio(file_path):
-    """Clean up temporary audio file"""
-    try:
-        if file_path and os.path.exists(file_path):
-            os.unlink(file_path)
-    except Exception as e:
-
-        print(f"Cleanup error: {str(e)}")
