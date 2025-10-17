@@ -92,7 +92,7 @@ Follow these steps to set up the project on your local machine:
 
 3. Clone repository
    ```
-   git clone https://github.com/LexMainye/Parrot-Transcriber
+   git clone https://github.com/LexMainye/Kasuku-Transcriber
     ```
    
 4.  Navigate to the project directory
