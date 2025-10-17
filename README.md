@@ -27,13 +27,13 @@ This project leverages a powerful stack of modern AI and machine learning techno
 * **Export Options**: Copy or save your transcriptions for later use
 
 # 🚀 How to Use
-
+```mermaid
 flowchart TD
-    A[ Start Here] --> B[1. Login]
+    A[🚀 Start Here] --> B[🔐 1. Login]
     
     B --> C[Use Demo Credentials]
     
-    C --> D[2. Record Audio]
+    C --> D[🎤 2. Record Audio]
     
     D --> E[Select Language from dropdown]
     E --> F[Click Record Yourself]
@@ -41,13 +41,13 @@ flowchart TD
     G --> H[Speak into the microphone]
     H --> I[Click Stop when done]
     
-    I --> J[3. Transcribe]
+    I --> J[📝 3. Transcribe]
     
     J --> K[Click Transcribe Audio]
     K --> L[Wait for Processing]
     L --> M[View Results]
     
-    M --> N[4. Manage Transcriptions]
+    M --> N[💾 4. Manage Transcriptions]
     
     N --> O[Save Transcription]
     N --> P[Copy to Clipboard]
@@ -62,7 +62,7 @@ flowchart TD
     style D fill:#e8f5e8,color:#000,stroke:#1b5e20
     style J fill:#fff3e0,color:#000,stroke:#e65100
     style N fill:#fce4ec,color:#000,stroke:#880e4f
-
+```
 
 # 💬 Supported Languages 
 Currently supports transcription for:
