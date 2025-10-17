@@ -27,43 +27,50 @@ This project leverages a powerful stack of modern AI and machine learning techno
 * **Export Options**: Copy or save your transcriptions for later use
 
 # 🚀 How to Use
-# 🚀 How to Use
 
-```mermaid
-flowchart TD
-    A[🚀 Start Here] --> B[🔐 1. Login]
-    
-    B --> C[Use Demo Credentials]
-    
-    C --> D[🎤 2. Record Audio]
-    
-    D --> E[Select Language from dropdown]
-    E --> F[Click Record Yourself]
-    F --> G[Allow Microphone Access]
-    G --> H[Speak Clearly]
-    H --> I[Click Stop when done]
-    
-    I --> J[📝 3. Transcribe]
-    
-    J --> K[Click Transcribe Audio]
-    K --> L[Wait for Processing]
-    L --> M[View Results]
-    
-    M --> N[💾 4. Manage Transcriptions]
-    
-    N --> O[Save Transcription]
-    N --> P[Copy to Clipboard]
-    N --> Q[View History]
-    
-    Q --> R[Search with search bar]
-    Q --> S[Filter by language]
-    Q --> T[Delete unwanted items]
-
-    style A fill:#e1f5fe,color:#000,stroke:#01579b,stroke-width:2px
-    style B fill:#f3e5f5,color:#000,stroke:#4a148c
-    style D fill:#e8f5e8,color:#000,stroke:#1b5e20
-    style J fill:#fff3e0,color:#000,stroke:#e65100
-    style N fill:#fce4ec,color:#000,stroke:#880e4f
+🚀 START HERE
+    ↓
+┌─────────────────────────┐
+│  🔐 1. LOGIN            │
+└─────────────────────────┘
+    ↓
+Use Demo Credentials
+    ↓
+┌─────────────────────────┐
+│  🎤 2. RECORD AUDIO     │
+└─────────────────────────┘
+    ↓
+Select Language from dropdown
+    ↓
+Click "Record Yourself"
+    ↓
+Allow Microphone Access
+    ↓
+Speak to the microphone
+    ↓
+Click "Stop" when done
+    ↓
+┌─────────────────────────┐
+│  📝 3. TRANSCRIBE       │
+└─────────────────────────┘
+    ↓
+Click "Transcribe Audio"
+    ↓
+Wait for Processing
+    ↓
+View Results
+    ↓
+┌─────────────────────────────────┐
+│  💾 4. MANAGE TRANSCRIPTIONS    │
+└─────────────────────────────────┘
+    ↓
+    ├─→ Save Transcription
+    ├─→ Copy to Clipboard
+    └─→ View History
+            ↓
+            ├─→ Search with search bar
+            ├─→ Filter by language
+            └─→ Delete unwanted items
 
 
 # 💬 Supported Languages 
