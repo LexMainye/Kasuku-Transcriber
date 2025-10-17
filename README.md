@@ -27,14 +27,17 @@ This project leverages a powerful stack of modern AI and machine learning techno
 * **Export Options**: Copy or save your transcriptions for later use
 
 # 🚀 How to Use
+# 🚀 How to Use
+
+```mermaid
 flowchart TD
     A[🚀 Start Here] --> B[🔐 1. Login]
     
-    B --> C[Use Demo Credentials<br/>shown on login page]
+    B --> C[Use Demo Credentials]
     
     C --> D[🎤 2. Record Audio]
     
-    D --> E[Select Language<br/>from dropdown]
+    D --> E[Select Language from dropdown]
     E --> F[Click Record Yourself]
     F --> G[Allow Microphone Access]
     G --> H[Speak Clearly]
@@ -55,15 +58,14 @@ flowchart TD
     Q --> R[Search with search bar]
     Q --> S[Filter by language]
     Q --> T[Delete unwanted items]
-    
-    %% Styling
+
     style A fill:#e1f5fe,color:#000,stroke:#01579b,stroke-width:2px
     style B fill:#f3e5f5,color:#000,stroke:#4a148c
     style D fill:#e8f5e8,color:#000,stroke:#1b5e20
     style J fill:#fff3e0,color:#000,stroke:#e65100
     style N fill:#fce4ec,color:#000,stroke:#880e4f
 
-    
+
 # 💬 Supported Languages 
 Currently supports transcription for:
 
