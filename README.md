@@ -35,13 +35,13 @@ flowchart TD
    C1 --> D[🎤 3. Record Audio]
    D --> D1[Allow Microphone Access]
    D1 --> D2[Click Microphone Button]
-   D2 --> D3[The User Records themselves]
+   D2 --> D3[The User Records Themselves]
    D3 --> D4[Click Stop]
 
    D4 --> E[📝 4. Transcribe]
    E --> E1[Click Transcribe Button]
    E1 --> E2[Wait for Processing]
-   E2 --> E3[Green Card Appears with 4 options]
+   E2 --> E3[A Green Card with the Transcribed text Appears with 4 options]
 
    E3 --> F[💾 5. Manage Transcription]
 
