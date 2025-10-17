@@ -27,39 +27,43 @@ This project leverages a powerful stack of modern AI and machine learning techno
 * **Export Options**: Copy or save your transcriptions for later use
 
 # 🚀 How to Use
-# 🔐 1. Login
+flowchart TD
+    A[🚀 Start Here] --> B[🔐 1. Login]
+    
+    B --> C[Use Demo Credentials<br/>shown on login page]
+    
+    C --> D[🎤 2. Record Audio]
+    
+    D --> E[Select Language<br/>from dropdown]
+    E --> F[Click Record Yourself]
+    F --> G[Allow Microphone Access]
+    G --> H[Speak Clearly]
+    H --> I[Click Stop when done]
+    
+    I --> J[📝 3. Transcribe]
+    
+    J --> K[Click Transcribe Audio]
+    K --> L[Wait for Processing]
+    L --> M[View Results]
+    
+    M --> N[💾 4. Manage Transcriptions]
+    
+    N --> O[Save Transcription]
+    N --> P[Copy to Clipboard]
+    N --> Q[View History]
+    
+    Q --> R[Search with search bar]
+    Q --> S[Filter by language]
+    Q --> T[Delete unwanted items]
+    
+    %% Styling
+    style A fill:#e1f5fe,color:#000,stroke:#01579b,stroke-width:2px
+    style B fill:#f3e5f5,color:#000,stroke:#4a148c
+    style D fill:#e8f5e8,color:#000,stroke:#1b5e20
+    style J fill:#fff3e0,color:#000,stroke:#e65100
+    style N fill:#fce4ec,color:#000,stroke:#880e4f
 
-- Use the demo credentials provided on the login page:
-![App Screenshot](https://github.com/LexMainye/Kasuku-Transcriber/blob/a6b4368b8a47c62d70474efe74258fd5e8f20378/Screenshots/Screen%20Shot%202025-09-24%20at%202.09.29%20PM.png)
-
-
-
-# 🎤 2. Record Audio
-
-![App Screenshot](https://github.com/LexMainye/Kasuku-Transcriber/blob/a6b4368b8a47c62d70474efe74258fd5e8f20378/Screenshots/Screen%20Shot%202025-09-24%20at%202.10.28%20PM.png)
-
-* Select your preferred language from the dropdown menu
-* Click the "Record Yourself" button
-* Allow microphone access when prompted
-* Speak clearly into your microphone
-* Click stop when finished recording
-
-# 📝 3. Transcribe
-
-![App Screenshot](https://github.com/LexMainye/Kasuku-Transcriber/blob/a6b4368b8a47c62d70474efe74258fd5e8f20378/Screenshots/Screen%20Shot%202025-09-24%20at%202.12.31%20PM.png)
-
-* Click "Transcribe Audio" button that appears to process your recording
-* Wait for the transcription results to appear
-
-# 💾 4. Manage Transcriptions
-
-* Save: Click the "Save" button to store your transcription
-* Copy: Use the "Copy" button to copy text to your clipboard
-* View History: Access "Saved Transcriptions" to see all your past recordings
-* Search: Use the search bar to find specific transcriptions
-* Filter: Filter transcriptions by language
-* Delete: Remove unwanted transcriptions
-
+    
 # 💬 Supported Languages 
 Currently supports transcription for:
 
