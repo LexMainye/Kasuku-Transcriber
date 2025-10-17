@@ -35,7 +35,7 @@ flowchart TD
    C1 --> D[🎤 3. Record Audio]
    D --> D1[Allow Microphone Access]
    D1 --> D2[Click Microphone Button]
-   D2 --> D3[Speak into Microphone]
+   D2 --> D3[The User Records themselves]
    D3 --> D4[Click Stop]
 
    D4 --> E[📝 4. Transcribe]
@@ -93,8 +93,8 @@ flowchart TD
 # 💬 Supported Languages 
 Currently supports transcription for:
 
-* English : Using cdli/whisper-small_finetuned_kenyan_english_nonstandard_speech_v0.9 model
-* Swahili : Using cdli/whisper-small-Swahili_finetuned_small_CV20 model
+* ✅ English 
+* ✅ Swahili
 
 # 🎯 Key Benefits
 
