@@ -5,9 +5,6 @@
 An ASR project for non standard Kenyan speech that uses finetunned whisper models to understand non standard Kenyan speech 
 A simple and powerful speech transcription application designed for non-standard speech patterns. Kasuku Transcriber helps you convert audio recordings into text with support for English and Swahili.
 
-## 🚀 Technologies Used
-
-This project leverages a powerful stack of modern AI and machine learning technologies to perform accurate and efficient audio transcription.
 # Technology Stack
 
 | Category | Technologies |
@@ -29,39 +26,40 @@ This project leverages a powerful stack of modern AI and machine learning techno
 # 🚀 How to Use
 ```mermaid
 flowchart TD
-    A[🚀 Start Here] --> B[🔐 1. Login]
+   A[🚀 Start Here] --> B[🔐 1. Login]
     
-    B --> C[Use Demo Credentials]
-    
-    C --> D[Select Language from dropdown]
-    
-    D --> E[🎤 2. Record Audio]
-    E --> F[Click Record Yourself]
-    F --> G[Allow Microphone Access]
-    G --> H[Speak into the microphone]
-    H --> I[Click Stop when done]
-    
-    I --> J[📝 3. Transcribe]
-    
-    J --> K[Click Transcribe Audio]
-    K --> L[Wait for Processing]
-    L --> M[View Results]
-    
-    M --> N[💾 4. Manage Transcriptions]
-    
-    N --> O[Save Transcription]
-    N --> P[Copy to Clipboard]
-    N --> Q[View History]
-    
-    Q --> R[Search with search bar]
-    Q --> S[Filter by language]
-    Q --> T[Delete unwanted items]
-    
-    style A fill:#e1f5fe,color:#000,stroke:#01579b,stroke-width:2px
-    style B fill:#f3e5f5,color:#000,stroke:#4a148c
-    style D fill:#e8f5e8,color:#000,stroke:#1b5e20
-    style J fill:#fff3e0,color:#000,stroke:#e65100
-    style N fill:#fce4ec,color:#000,stroke:#880e4f
+   B --> C[Use Demo Credentials]
+
+   C --> D[🎤 2. Record Audio]
+
+   D --> E[Select Language]
+   E --> F[Click Record]
+   F --> G[Allow Microphone]
+   G --> H[Speak Clearly]
+   H --> I[Click Stop]
+
+   I --> J[📝 3. Transcribe]
+
+   J --> K[Click Transcribe]
+   K --> L[Wait for Processing]
+   L --> M[View Results]
+
+   M --> N[💾 4. Manage]
+
+   N --> O[Save]
+   N --> P[Copy]
+   N --> Q[Speak]
+   N --> R[View History]
+
+   R --> S[Search]
+   R --> T[Filter by Language]
+   R --> U[Delete Item]
+
+   style A fill:#ff9800,color:#000,stroke:#e65100,stroke-width:3px
+   style B fill:#4caf50,color:#fff,stroke:#2e7d32,stroke-width:2px
+   style D fill:#4caf50,color:#fff,stroke:#2e7d32,stroke-width:2px
+   style J fill:#4caf50,color:#fff,stroke:#2e7d32,stroke-width:2px
+   style N fill:#4caf50,color:#fff,stroke:#2e7d32,stroke-width:2px
 ```
 
 # 💬 Supported Languages 
