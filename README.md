@@ -35,7 +35,7 @@ flowchart TD
    D --> E[Select Language]
    E --> F[Click Record]
    F --> G[Allow Microphone]
-   G --> H[Speak Clearly]
+   G --> H[Speak into the Microphone]
    H --> I[Click Stop]
 
    I --> J[📝 3. Transcribe]
@@ -52,8 +52,10 @@ flowchart TD
    N --> R[View History]
 
    R --> S[Search]
-   R --> T[Filter by Language]
-   R --> U[Delete Item]
+   R --> T[Speak Transcribed Text]
+   R --> U[Copy Transcribed Text]
+   R --> V[Filter by Language]
+   R --> X[Delete Saved Item]
 
    style A fill:#ff9800,color:#000,stroke:#e65100,stroke-width:3px
    style B fill:#4caf50,color:#fff,stroke:#2e7d32,stroke-width:2px
@@ -130,9 +132,6 @@ Follow these steps to set up the project on your local machine:
 
 For any questions or feedback, please feel free to reach out:
 
-[![Email](https://img.shields.io/badge/-Email-D14836?style=flat-square&logo=gmail&logoColor=white)](mailto:sheldonmainye@gmail.com)
-[![LinkedIn](https://img.shields.io/badge/-LinkedIn-0A66C2?style=flat-square&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/alexander-mainye-745283148/)
-[![Signal](https://img.shields.io/badge/-Signal-3A76F0?style=flat-square&logo=signal&logoColor=white)](https://signal.me/#u/[Lex.71])
-[![X](https://img.shields.io/badge/-X-000000?style=flat-square&logo=x&logoColor=white)](https://x.com/Alekii_111)
+[![Linktree](https://img.shields.io/badge/-All_Links-39E09B?style=for-the-badge&logo=linktree&logoColor=white)](https://linktr.ee/mainye)
 
 
