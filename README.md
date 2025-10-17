@@ -33,9 +33,9 @@ flowchart TD
     
     B --> C[Use Demo Credentials]
     
-    C --> D[🎤 2. Record Audio]
+    C --> D[Select Language from dropdown]
     
-    D --> E[Select Language from dropdown]
+    D --> E[🎤 2. Record Audio]
     E --> F[Click Record Yourself]
     F --> G[Allow Microphone Access]
     G --> H[Speak into the microphone]
