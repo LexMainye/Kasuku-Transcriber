@@ -59,7 +59,7 @@ flowchart TD
 
    F3 --> G[📚 6. View Saved Transcriptions]
 
-   F4 --> D
+   F4 --> D2
 
    G --> G1[Search Cards]
    G --> G2[Filter by Language]
