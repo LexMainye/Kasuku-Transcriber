@@ -29,7 +29,7 @@ A simple and powerful speech transcription application designed for non-standard
 flowchart TD
    A[🚀 Start Here] --> B[🔐 1. Login]
    
-   B --> C[📋 2. Select Language]
+   B --> C[ ✅ 2. Select Language]
    C --> C1[Choose English or Swahili]
 
    C1 --> D[🎤 3. Record Audio]
