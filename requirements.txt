@@ -1,18 +1,33 @@
 # Pin NumPy to a specific 1.x version
 numpy==1.26.4
 
-# Then your other dependencies
-streamlit
+# Core Streamlit
+streamlit>=1.28.0
+
+# PyTorch (CPU version - use different index-url for GPU)
 torch>=2.0.0
-torchvision
-torchaudio
-transformers
+torchvision>=0.15.0
+torchaudio>=2.0.0
+
+# Transformers and ML
+transformers>=4.30.0
+accelerate>=0.20.0
+huggingface_hub>=0.16.0
+
+# Audio Processing
 librosa>=0.10.0
 soundfile>=0.12.0
-pydub
-pandas
-scipy
-accelerate
-huggingface_hub
-pyperclip
-gtts
+scipy>=1.10.0
+
+# Text-to-Speech
+gtts>=2.4.0
+
+# Optional: Advanced audio processing (if needed)
+pydub>=0.25.1
+
+# Utilities
+pandas>=2.0.0
+python-dateutil>=2.8.0
+
+# Optional: Clipboard support (may not work in all environments)
+ pyperclip>=1.8.2
