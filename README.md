@@ -142,11 +142,21 @@ Follow these steps to set up the project on your local machine:
    ```
 
 7. Run the project
-   After installing the dependencies, run the project
+
+   After installing the dependencies, run the project locally
    
    ```
    streamlit run src/app.py
    ```
+
+8. To deploy the app on modal
+   
+   To sucessfully deploy the app on modal
+
+   ```
+   modal deploy deploy.py
+   ```
+   
 
 # 💻 Technical Requirements
 
