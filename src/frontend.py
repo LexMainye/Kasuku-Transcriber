@@ -1031,64 +1031,24 @@ def render_transcription_card(item, original_index):
 
     # --- 3. COPY-TO-CLIPBOARD BUTTON AND LOGIC ---
     with col2:
-        if st.button("Copy", key=f"copy_{original_index}", icon=":material/content_copy:", help="Copy this transcription"):
-            escaped_text = transcription_text.replace("'", "\\'").replace('"', '\\"').replace('`', '\\`').replace('\n', '\\n')
+        if st.button("Copy", key=f"copy_{original_index}", 
+                    icon=":material/content_copy:"):
             
-            st.markdown(f"""
-            <script>
-                (function() {{
-                    const textToCopy = `{escaped_text}`;
-                    
-                    // Modern async clipboard API
-                    if (navigator.clipboard) {{
-                        navigator.clipboard.writeText(textToCopy).then(() => {{
-                            showCopyNotification();
-                        }}).catch(err => {{
-                            console.error('Async copy failed, falling back.', err);
-                            fallbackCopy(textToCopy);
-                        }});
-                    }} else {{
-                        // Fallback for older browsers
-                        fallbackCopy(textToCopy);
-                    }}
-                }})();
-
-                function fallbackCopy(text) {{
-                    const textArea = document.createElement('textarea');
-                    textArea.value = text;
-                    textArea.style.position = 'fixed'; // Avoid scrolling to bottom
-                    document.body.appendChild(textArea);
-                    textArea.focus();
-                    textArea.select();
-                    try {{
-                        const successful = document.execCommand('copy');
-                        if (successful) showCopyNotification();
-                    }} catch (err) {{
-                        console.error('Fallback copy failed', err);
-                    }}
-                    document.body.removeChild(textArea);
-                }}
-
-                function showCopyNotification() {{
-                    const notification = document.createElement('div');
-                    notification.innerHTML = '✓ Copied to clipboard!';
-                    notification.style.cssText = `
-                        position: fixed; top: 20px; right: 20px; background: #4CAF50; color: white;
-                        padding: 12px 20px; border-radius: 5px; z-index: 10000;
-                        font-family: 'Space Grotesk', sans-serif; font-weight: 500;
-                        box-shadow: 0 4px 12px rgba(0,0,0,0.15); opacity: 0;
-                        transition: opacity 0.3s ease;
-                    `;
-                    document.body.appendChild(notification);
-                    setTimeout(() => notification.style.opacity = '1', 10);
-                    setTimeout(() => {{
-                        notification.style.opacity = '0';
-                        setTimeout(() => notification.remove(), 300);
-                    }}, 2000);
-                }}
-            </script>
-            """, unsafe_allow_html=True)
-
+            try:
+                import pyperclip
+                pyperclip.copy(transcription_text)
+                st.toast("Copied to clipboard!")  # Auto-dismisses
+                
+            except:
+                # For fallback, use balloons as confirmation
+                st.text_area(
+                    "Copy this text:",
+                    value=transcription_text,
+                    height=100,
+                    key=f"copy_textarea_{original_index}"
+                )
+                st.balloons()  # Fun visual feedback
+                
     with col3:
         if st.button("Delete", key=f"delete_{original_index}", icon=":material/delete_forever:", help="Delete this transcription"):
             delete_transcription(original_index, st.session_state.transcription_history)
@@ -1273,123 +1233,21 @@ def render_transcription_result(transcription, selected_language):
         )
         
         if copy_clicked:
-            import html
-            
-            # Properly escape for JavaScript
-            js_safe_text = (clean_transcription
-                        .replace('\\', '\\\\')
-                        .replace('`', '\\`')
-                        .replace('$', '\\$')
-                        .replace('\n', '\\n')
-                        .replace('\r', '\\r')
-                        .replace("'", "\\'")
-                        .replace('"', '\\"'))
-            
-            # Generate unique ID for this copy operation
-            copy_id = f"main_copy_{id(clean_transcription)}"
-            
-            st.markdown(f"""
-            <script>
-            (function() {{
-                const textToCopy = `{js_safe_text}`;
-                
-                // Try modern Clipboard API
-                if (navigator.clipboard && window.isSecureContext) {{
-                    navigator.clipboard.writeText(textToCopy)
-                        .then(() => {{
-                            showMainCopySuccess();
-                            console.log('Text copied successfully');
-                        }})
-                        .catch(err => {{
-                            console.log('Clipboard API failed, using fallback', err);
-                            fallbackCopyMain(textToCopy);
-                        }});
-                }} else {{
-                    fallbackCopyMain(textToCopy);
-                }}
-            }})();
-            
-            function fallbackCopyMain(text) {{
-                const textArea = document.createElement('textarea');
-                textArea.value = text;
-                textArea.style.position = 'fixed';
-                textArea.style.left = '-999999px';
-                textArea.style.top = '-999999px';
-                document.body.appendChild(textArea);
-                textArea.focus();
-                textArea.select();
-                
-                try {{
-                    const successful = document.execCommand('copy');
-                    document.body.removeChild(textArea);
-                    
-                    if (successful) {{
-                        showMainCopySuccess();
-                    }} else {{
-                        alert('Failed to copy. Please select and copy manually.');
-                    }}
-                }} catch (err) {{
-                    document.body.removeChild(textArea);
-                    alert('Copy not supported in this browser.');
-                }}
-            }}
-            
-            function showMainCopySuccess() {{
-                const notification = document.createElement('div');
-                notification.innerHTML = '✓ Copied to clipboard!';
-                notification.style.cssText = `
-                    position: fixed;
-                    top: 20px;
-                    right: 20px;
-                    background: #4CAF50;
-                    color: white;
-                    padding: 15px 25px;
-                    border-radius: 8px;
-                    z-index: 10000;
-                    font-family: 'Space Grotesk', sans-serif;
-                    font-weight: 600;
-                    font-size: 16px;
-                    box-shadow: 0 4px 16px rgba(0,0,0,0.2);
-                    animation: slideInRight 0.3s ease;
-                `;
-                
-                document.body.appendChild(notification);
-                
-                setTimeout(() => {{
-                    notification.style.animation = 'slideOutRight 0.3s ease';
-                    setTimeout(() => {{
-                        if (notification.parentNode) {{
-                            notification.parentNode.removeChild(notification);
-                        }}
-                    }}, 300);
-                }}, 2500);
-            }}
-            </script>
-            
-            <style>
-            @keyframes slideInRight {{
-                from {{
-                    transform: translateX(400px);
-                    opacity: 0;
-                }}
-                to {{
-                    transform: translateX(0);
-                    opacity: 1;
-                }}
-            }}
-            
-            @keyframes slideOutRight {{
-                from {{
-                    transform: translateX(0);
-                    opacity: 1;
-                }}
-                to {{
-                    transform: translateX(400px);
-                    opacity: 0;
-                }}
-            }}
-            </style>
-            """, unsafe_allow_html=True)
+            # Method 1: Try pyperclip (local only)
+            try:
+                import pyperclip
+                pyperclip.copy(clean_transcription)
+                st.toast("Copied to clipboard!")
+            except:
+                # Method 2: Show in text area for easy copying
+                st.info("📋 Select and copy the text below:", icon="ℹ️")
+                st.text_area(
+                    "Transcription Text",
+                    value=clean_transcription,
+                    height=150,
+                    key="copy_textarea_main",
+                    label_visibility="collapsed"
+                )
     
     with col3:
         # Save button
