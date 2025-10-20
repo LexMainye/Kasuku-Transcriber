@@ -158,6 +158,6 @@ Follow these steps to set up the project on your local machine:
 
 For any questions or feedback, please feel free to reach out:
 
-[![Linktree](https://img.shields.io/badge/-Linktree-39E09B?style=for-the-badge&logo=linktree&logoColor=white)](https://linktr.ee/mainye)
+[![Linktree](https://img.shields.io/badge/-Alexander Sheldon Mainye -39E09B?style=for-the-badge&logo=linktree&logoColor=white)](https://linktr.ee/mainye)
 
 
