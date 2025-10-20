@@ -24,7 +24,7 @@ A simple and powerful speech transcription application designed for non-standard
 * **Search Functionality**: Find specific transcriptions by content
 * **Export Options**: Copy or save your transcriptions for later use
 
-# 🚀 How to Use
+# 🚀 How it works
 ```mermaid
 flowchart TD
    A[🚀 Start Here] --> B[🔐 1. Login]
@@ -158,6 +158,6 @@ Follow these steps to set up the project on your local machine:
 
 For any questions or feedback, please feel free to reach out:
 
-[![Linktree](https://img.shields.io/badge/-Linktree-39E09B?style=for-the-badge&logo=linktree&logoColor=white)](https://linktr.ee/mainye)
+[![Linktree](https://img.shields.io/badge/-LinkTree-39E09B?style=for-the-badge&logo=linktree&logoColor=white)](https://linktr.ee/mainye)
 
 
