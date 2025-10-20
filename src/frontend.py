@@ -1273,99 +1273,122 @@ def render_transcription_result(transcription, selected_language):
         )
         
         if copy_clicked:
-            # Use JavaScript clipboard functionality with visual feedback
-            escaped_text = clean_transcription.replace("'", "\\'").replace('"', '\\"').replace('`', '\\`').replace('\n', '\\n')
+            import html
+            
+            # Properly escape for JavaScript
+            js_safe_text = (clean_transcription
+                        .replace('\\', '\\\\')
+                        .replace('`', '\\`')
+                        .replace('$', '\\$')
+                        .replace('\n', '\\n')
+                        .replace('\r', '\\r')
+                        .replace("'", "\\'")
+                        .replace('"', '\\"'))
+            
+            # Generate unique ID for this copy operation
+            copy_id = f"main_copy_{id(clean_transcription)}"
             
             st.markdown(f"""
             <script>
-                function copyTranscriptionText() {{
-                    const text = `{escaped_text}`;
-                    
-                    if (navigator.clipboard) {{
-                        // Modern clipboard API
-                        navigator.clipboard.writeText(text).then(function() {{
-                            showCopySuccessTranscription();
-                        }}).catch(function(err) {{
-                            console.error('Copy failed:', err);
-                            fallbackCopyTranscription(text);
+            (function() {{
+                const textToCopy = `{js_safe_text}`;
+                
+                // Try modern Clipboard API
+                if (navigator.clipboard && window.isSecureContext) {{
+                    navigator.clipboard.writeText(textToCopy)
+                        .then(() => {{
+                            showMainCopySuccess();
+                            console.log('Text copied successfully');
+                        }})
+                        .catch(err => {{
+                            console.log('Clipboard API failed, using fallback', err);
+                            fallbackCopyMain(textToCopy);
                         }});
-                    }} else {{
-                        // Fallback for older browsers
-                        fallbackCopyTranscription(text);
-                    }}
+                }} else {{
+                    fallbackCopyMain(textToCopy);
                 }}
+            }})();
+            
+            function fallbackCopyMain(text) {{
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                textArea.style.position = 'fixed';
+                textArea.style.left = '-999999px';
+                textArea.style.top = '-999999px';
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
                 
-                function fallbackCopyTranscription(text) {{
-                    const textArea = document.createElement('textarea');
-                    textArea.value = text;
-                    textArea.style.position = 'fixed';
-                    textArea.style.top = '0';
-                    textArea.style.left = '0';
-                    textArea.style.width = '2em';
-                    textArea.style.height = '2em';
-                    textArea.style.padding = '0';
-                    textArea.style.border = 'none';
-                    textArea.style.outline = 'none';
-                    textArea.style.boxShadow = 'none';
-                    textArea.style.background = 'transparent';
-                    
-                    document.body.appendChild(textArea);
-                    textArea.focus();
-                    textArea.select();
-                    
-                    try {{
-                        const successful = document.execCommand('copy');
-                        if (successful) {{
-                            showCopySuccessTranscription();
-                        }}
-                    }} catch (err) {{
-                        console.error('Fallback copy failed:', err);
-                    }}
-                    
+                try {{
+                    const successful = document.execCommand('copy');
                     document.body.removeChild(textArea);
+                    
+                    if (successful) {{
+                        showMainCopySuccess();
+                    }} else {{
+                        alert('Failed to copy. Please select and copy manually.');
+                    }}
+                }} catch (err) {{
+                    document.body.removeChild(textArea);
+                    alert('Copy not supported in this browser.');
                 }}
+            }}
+            
+            function showMainCopySuccess() {{
+                const notification = document.createElement('div');
+                notification.innerHTML = '✓ Copied to clipboard!';
+                notification.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    background: #4CAF50;
+                    color: white;
+                    padding: 15px 25px;
+                    border-radius: 8px;
+                    z-index: 10000;
+                    font-family: 'Space Grotesk', sans-serif;
+                    font-weight: 600;
+                    font-size: 16px;
+                    box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+                    animation: slideInRight 0.3s ease;
+                `;
                 
-                function showCopySuccessTranscription() {{
-                    // Show temporary notification
-                    const notification = document.createElement('div');
-                    notification.innerHTML = '✓ Copied to clipboard!';
-                    notification.style.cssText = `
-                        position: fixed;
-                        top: 20px;
-                        right: 20px;
-                        background: #4CAF50;
-                        color: white;
-                        padding: 12px 20px;
-                        border-radius: 5px;
-                        z-index: 10000;
-                        font-family: 'Space Grotesk', sans-serif;
-                        font-weight: 500;
-                        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-                        opacity: 0;
-                        transition: opacity 0.3s ease;
-                    `;
-                    
-                    document.body.appendChild(notification);
-                    
-                    // Animate in
-                    setTimeout(() => {{
-                        notification.style.opacity = '1';
-                    }}, 10);
-                    
-                    // Remove after 2 seconds
-                    setTimeout(() => {{
-                        notification.style.opacity = '0';
-                        setTimeout(() => {{
-                            if (notification.parentNode) {{
-                                notification.parentNode.removeChild(notification);
-                            }}
-                        }}, 300);
-                    }}, 2000);
-                }}
+                document.body.appendChild(notification);
                 
-                // Execute copy function
-                copyTranscriptionText();
+                setTimeout(() => {{
+                    notification.style.animation = 'slideOutRight 0.3s ease';
+                    setTimeout(() => {{
+                        if (notification.parentNode) {{
+                            notification.parentNode.removeChild(notification);
+                        }}
+                    }}, 300);
+                }}, 2500);
+            }}
             </script>
+            
+            <style>
+            @keyframes slideInRight {{
+                from {{
+                    transform: translateX(400px);
+                    opacity: 0;
+                }}
+                to {{
+                    transform: translateX(0);
+                    opacity: 1;
+                }}
+            }}
+            
+            @keyframes slideOutRight {{
+                from {{
+                    transform: translateX(0);
+                    opacity: 1;
+                }}
+                to {{
+                    transform: translateX(400px);
+                    opacity: 0;
+                }}
+            }}
+            </style>
             """, unsafe_allow_html=True)
     
     with col3:
