@@ -1,8 +1,0 @@
-workspace:
-  name: kasuku-transcriber
-
-image:
-  python_version: "3.11"
-
-labels:
-  - name: kasuku-transcriber
