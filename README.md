@@ -24,7 +24,7 @@ A simple and powerful speech transcription application designed for non-standard
 * **Search Functionality**: Find specific transcriptions by content
 * **Export Options**: Copy or save your transcriptions for later use
 
-# 🚀 How to Use
+# 🚀 How it works
 ```mermaid
 flowchart TD
    A[🚀 Start Here] --> B[🔐 1. Login]
