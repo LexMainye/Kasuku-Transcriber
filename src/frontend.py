@@ -503,7 +503,7 @@ def login_page():
         # Centered title and subtitle with Material Icons
         st.markdown("""
             <h1 class='login-main-title'>
-            Kasuku Transcriber 🦜
+            Kasuku 🦜
             </h1>
         """, unsafe_allow_html=True)
         
@@ -586,7 +586,7 @@ if __name__ == "__main__":
 def render_sidebar():
     """Render the sidebar with navigation and enhanced TTS settings"""
     with st.sidebar:
-        st.markdown('<h1 class="kasuku-title"><span style="color: #000000;">Kasuku Transcriber</span> 🦜</h1>', unsafe_allow_html=True)
+        st.markdown('<h1 class="kasuku-title"><span style="color: #000000;">Kasuku</span> 🦜</h1>', unsafe_allow_html=True)
         
         st.markdown("##")
         
@@ -1207,7 +1207,7 @@ def render_transcription_result(transcription, selected_language):
         # Simple green border using CSS that definitely works
         st.markdown(f"""
         <div style="border: 2px solid #4CAF50; border-radius: 5px; padding: 20px; background-color: #D3FF98; margin: 10px 0;">
-            <h4 style="color: #1A1A1A; margin: 0 0 10px 0;"> Transcribed Text ({selected_language}):</h4>
+            <h4 style="color: #1A1A1A; margin: 0 0 10px 0;"> {selected_language}</h4>
             <p style="font-size: 18px; color: #1A1A1A; margin: 0; font-weight: 500; line-height: 1.5;">{html.escape(clean_transcription)}</p>
         </div>
         """, unsafe_allow_html=True)
