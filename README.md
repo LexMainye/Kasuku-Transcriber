@@ -25,6 +25,8 @@
 * **Search Functionality**: Find specific transcriptions by content
 * **Export Options**: Copy or save your transcriptions for later use
 
+* 📹 **[Demo Video](https://drive.google.com/drive/folders/1aEOcABBTU8vpO2khIQG6HzWbSakQLOpH)** - See the project in action
+
 # ⚙️ How it works
 ```mermaid
 flowchart TD
