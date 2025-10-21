@@ -19,7 +19,7 @@ DEMO_USERS = {
     "alex@kasuku.com": {
         "password_hash": "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8",  # 'password'
         "name": "Alex",
-        "phone": "+254712345678"
+        "phone": "0712345678"
     }
 }
 
@@ -567,37 +567,6 @@ def text_to_speech_gtts(text, language="en"):
         with tempfile.NamedTemporaryFile(delete=False, suffix='.mp3') as temp_file:
             temp_path = temp_file.name
         
-        tts = gTTS(text=text, lang=language, slow=False)
-        tts.save(temp_path)
-        
-        return temp_path
-        
-    except ImportError:
-        print("gTTS not installed. Install with: pip install gtts")
-        return None
-    except Exception as e:
-        print(f"gTTS Error: {str(e)}")
-        return None
-def text_to_speech_gtts(text, language="en"):
-    """
-    Convert text to speech using Google TTS (requires internet connection)
-    
-    Args:
-        text (str): Text to convert to speech
-        language (str): Language code ('en' for English, 'sw' for Swahili)
-    
-    Returns:
-        str: Path to the generated audio file, or None if failed
-    """
-    try:
-        from gtts import gTTS
-        import tempfile
-        
-        # Create temporary file for audio
-        with tempfile.NamedTemporaryFile(delete=False, suffix='.mp3') as temp_file:
-            temp_path = temp_file.name
-        
-        # Generate TTS
         tts = gTTS(text=text, lang=language, slow=False)
         tts.save(temp_path)
         

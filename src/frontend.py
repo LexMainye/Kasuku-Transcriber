@@ -568,7 +568,7 @@ def login_page():
             </p>
             <p class='demo-credential'>
                 <span class="material-icons">phone</span>
-                <strong>Phone:</strong> +254712345678
+                <strong>Phone:</strong> 0712345678
             </p>
             <p style='font-family: Space Grotesk; font-size: 0.9rem; color: #666; margin-top: 1rem; display: flex; align-items: center; gap: 8px;'>
                 <span class="material-icons" style="font-size: 18px;">info</span>
@@ -966,8 +966,7 @@ def render_transcription_card(item, original_index):
     # Add Streamlit buttons in columns: Speak, Copy, Delete
     col1, col2, col3, _ = st.columns([1, 1, 1, 5])
 
-    # --- 2. TEXT-TO-SPEECH (TTS) BUTTON AND LOGIC ---
-    # Replace the Speak button section in render_transcription_card() with this:
+    # --- 2. TEXT-TO-SPEECH (TTS) BUTTON AND LOGIC ---:
 
     with col1:
         if st.button("Speak", key=f"speak_{original_index}", icon=":material/volume_up:", 
@@ -1002,30 +1001,7 @@ def render_transcription_card(item, original_index):
                     if audio_base64:
                         # Determine audio format
                         audio_format = "wav" if audio_path.endswith('.wav') else "mp3"
-                        
-                        # Create HTML audio player with controls
-                        st.markdown(f"""
-                        <div style="margin: 10px 0; padding: 10px; background: #f0f0f0; border-radius: 5px;">
-                            <audio controls autoplay style="width: 100%;">
-                                <source src="data:audio/{audio_format};base64,{audio_base64}" 
-                                        type="audio/{audio_format}">
-                                Your browser does not support the audio element.
-                            </audio>
-                            <p style="font-size: 0.75rem; color: #666; margin: 5px 0 0 0; text-align: center;">
-                                🎵 Using: <strong>{engine_used.upper()}</strong> | 
-                                Gender: {selected_gender} | 
-                                Rate: {speech_rate}x | 
-                                Pitch: {voice_pitch}x
-                            </p>
-                        </div>
-                        """, unsafe_allow_html=True)
-                        
-                        st.success("✓ Audio ready! Playing now...")
-                    else:
-                        st.error("Failed to process audio file")
-                    
-                    # Clean up temporary file
-                    cleanup_temp_audio(audio_path)
+                     
                 else:
                     st.error("Failed to generate speech. Check your internet connection or TTS settings.")
 
@@ -1298,7 +1274,7 @@ def render_transcription_result(transcription, selected_language):
 
 def handle_transcription_actions():
     """Helper function to handle transcription actions in the main app flow"""
-    # This can be called in your main app flow to ensure proper state management
+
     
     # Clear any lingering feedback messages after a delay
     if 'feedback_clear_time' not in st.session_state:
