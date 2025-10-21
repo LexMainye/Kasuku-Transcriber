@@ -25,7 +25,7 @@
 * **Search Functionality**: Find specific transcriptions by content
 * **Export Options**: Copy or save your transcriptions for later use
 
-# 🚀 How it works
+# ⚙️ How it works
 ```mermaid
 flowchart TD
    A[🚀 Start Here] --> B[🔐 1. Login]
@@ -149,14 +149,24 @@ Follow these steps to set up the project on your local machine:
    streamlit run src/app.py
    ```
 
-8. To deploy the app on modal
+# 🚀 App Deployment
+
+1. To iterate the Kasuku streamlit app, you can run it “ephemerally” with `modal serve`. This will run a local process that watches the files and updates the app if anything changes.
    
-   To sucessfully deploy the app on modal
+   ```
+   modal serve deploy.py
+   ```
+   
+2. To sucessfully deploy the app on modal
 
    ```
    modal deploy deploy.py
    ```
-   
+
+For reference, see:
+- [Modal Streamlit Deployment Example](https://modal.com/docs/examples/serve_streamlit)
+
+  
 
 # 💻 Technical Requirements
 
