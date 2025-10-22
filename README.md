@@ -2,9 +2,7 @@
 
 ![In Progress](https://img.shields.io/badge/Status-In%20Progress-green?style=for-the-badge&logo=wrench&logoColor=white)
 
-- An ASR project for non standard Kenyan speech that uses finetunned whisper models to understand non standard Kenyan speech
-
-- A simple and powerful speech transcription application designed for non-standard speech patterns. The Kasuku webapp helps you convert audio recordings into text with support for English and Swahili.
+- A simple speech transcription web app designed for non-standard speech patterns. The Kasuku webapp helps you convert audio recordings into text with support for English and Swahili.
 
 # Technology Stack
 
