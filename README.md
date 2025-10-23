@@ -102,3 +102,68 @@ Currently supports transcription for:
 * Organized: Keep all your transcriptions in one place with timestamps
 * Flexible: Bilingual language support for English and Swahili.
 
+# 📥 Clone This Repository
+
+Follow these steps to set up the project on your local machine:
+
+1. Open your terminal (or Git Bash).
+   
+2. Navigate to the folder where you want to store the project:
+   ```
+   cd path/to/your/folder
+   ```
+
+3. Clone repository
+   ```
+   git clone https://github.com/LexMainye/Kasuku-Transcriber
+    ```
+   
+4.  Navigate to the project directory
+
+    ```
+    cd your-repo-name
+    ```
+
+5.  Install Dependencies
+
+    ```
+    python -m venv venv
+    source venv/bin/activate      # On macOS/Linux
+    venv\Scripts\activate         # On Windows
+    ```
+6. Install required packages from `requirements.txt`
+
+   ```
+   pip install -r requirements.txt
+   ```
+
+7. Run the project
+
+   After installing the dependencies, run the project locally
+   
+   ```
+   streamlit run src/app.py
+   ```
+
+# 🚀 App Deployment on Modal
+
+1. To iterate the Kasuku streamlit app, you can run it “ephemerally” with `modal serve`. This will run a local process that watches the files and updates the app if anything changes.
+   
+   ```
+   modal serve deploy.py
+   ```
+   
+2. To sucessfully deploy the app on modal
+
+   ```
+   modal deploy deploy.py
+   ```
+
+For reference, see:
+- [Modal Streamlit Deployment Example](https://modal.com/docs/examples/serve_streamlit)
+
+# 💻 Technical Requirements
+
+* Modern web browser with microphone support
+* Microphone access permissions
+
