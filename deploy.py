@@ -23,7 +23,7 @@ image = (
 app = modal.App("kasuku-transcriber", image=image)
 
 @app.function(
-    gpu="A10G",
+    gpu="A10",
     cpu=2,
     memory=16384,
     timeout=3600,
