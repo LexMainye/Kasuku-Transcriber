@@ -2,9 +2,7 @@
 
 ![In Progress](https://img.shields.io/badge/Status-In%20Progress-green?style=for-the-badge&logo=wrench&logoColor=white)
 
-- An ASR project for non standard Kenyan speech that uses finetunned whisper models to understand non standard Kenyan speech
-
-- A simple and powerful speech transcription application designed for non-standard speech patterns. Kasuku Transcriber helps you convert audio recordings into text with support for English and Swahili.
+- A simple speech transcription web app designed for non-standard speech patterns. The Kasuku webapp helps you convert audio recordings into text with support for Kenyan English and Swahili accents.
 
 # Technology Stack
 
@@ -25,7 +23,7 @@
 * **Search Functionality**: Find specific transcriptions by content
 * **Export Options**: Copy or save your transcriptions for later use
 
-# 🚀 How it works
+# ⚙️ How it works
 ```mermaid
 flowchart TD
    A[🚀 Start Here] --> B[🔐 1. Login]
@@ -102,9 +100,7 @@ Currently supports transcription for:
 * Accessibility: Designed specifically for non-standard speech patterns
 * User-Friendly: Simple interface that anyone can use
 * Organized: Keep all your transcriptions in one place with timestamps
-* Flexible: Bilingual language support for English and Swahili
-
----
+* Flexible: Bilingual language support for English and Swahili.
 
 # 📥 Clone This Repository
 
@@ -149,26 +145,25 @@ Follow these steps to set up the project on your local machine:
    streamlit run src/app.py
    ```
 
-8. To deploy the app on modal
+# 🚀 App Deployment on Modal
+
+1. To iterate the Kasuku streamlit app, you can run it “ephemerally” with `modal serve`. This will run a local process that watches the files and updates the app if anything changes.
    
-   To sucessfully deploy the app on modal
+   ```
+   modal serve deploy.py
+   ```
+   
+2. To sucessfully deploy the app on modal
 
    ```
    modal deploy deploy.py
    ```
-   
+
+For reference, see:
+- [Modal Streamlit Deployment Example](https://modal.com/docs/examples/serve_streamlit)
 
 # 💻 Technical Requirements
 
 * Modern web browser with microphone support
 * Microphone access permissions
-
----
-
-## Contact Details
-
-For any questions or feedback, please feel free to reach out:
-
-[![Linktree](https://img.shields.io/badge/-LinkTree-39E09B?style=for-the-badge&logo=linktree&logoColor=white)](https://linktr.ee/mainye)
-
 
