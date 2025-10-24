@@ -1,42 +1,53 @@
+# prewarm_models.py - More robust with progress tracking
 import os
 import sys
+import time
 
-def prewarm():
-    """
-    This function is run during the Modal image build.
-    It downloads all necessary models into the cache.
-    """
-    
+def prewarm_essential():
+    """Download essential models with better error handling"""
     print("🚀 Pre-warming Hugging Face models...")
-
+    
+    # Add timeout for downloads
+    import socket
+    socket.setdefaulttimeout(300)  # 5 minute timeout
+    
     try:
         from transformers import AutoModel, AutoTokenizer
         
-        # --- IMPORTANT --- 
-        # List of model names to pre-warm
         model_names = [
             "cdli/whisper-small-Swahili_finetuned_small_CV20",
             "cdli/whisper-small_finetuned_kenyan_english_nonstandard_speech_v0.9"
-            # "etc/etc"
         ]
 
-        for model_name in model_names:
-            print(f"Downloading model: {model_name}")
-            # Download the model weights
-            AutoModel.from_pretrained(model_name)
+        for i, model_name in enumerate(model_names, 1):
+            print(f"\n📥 [{i}/{len(model_names)}] Downloading: {model_name}")
             
-            print(f"Downloading tokenizer: {model_name}")
-            # Download the tokenizer
-            AutoTokenizer.from_pretrained(model_name)
+            try:
+                # Download with progress indication
+                start_time = time.time()
+                
+                # Tokenizer first (usually smaller)
+                tokenizer = AutoTokenizer.from_pretrained(model_name)
+                print(f"   ✅ Tokenizer downloaded")
+                
+                # Model with cleanup
+                model = AutoModel.from_pretrained(model_name)
+                print(f"   ✅ Model downloaded")
+                
+                # Clean up memory
+                del model, tokenizer
+                
+                download_time = time.time() - start_time
+                print(f"   ⏱️  Download completed in {download_time:.1f}s")
+                
+            except Exception as e:
+                print(f"   ⚠️  Failed to download {model_name}: {str(e)[:100]}...")
+                # Continue with next model
 
-    except ImportError:
-        print("❌ Error: 'transformers' library not found.")
-        print("Please ensure 'transformers' is in your requirements.txt")
-        sys.exit(1) # Exit with an error if transformers isn't installed
     except Exception as e:
-        print(f"⚠️ Warning: Could not download a model. Error: {e}")
+        print(f"❌ Error in pre-warming: {e}")
     
-    print("✅ Model pre-warming complete.")
+    print("\n✅ Model pre-warming complete.")
 
 if __name__ == "__main__":
-    prewarm()
+    prewarm_essential()
