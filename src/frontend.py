@@ -261,76 +261,6 @@ def load_css():
     </style>
     """, unsafe_allow_html=True)
 
-def copy_to_clipboard_js(text, element_id):
-    """Generate JavaScript to copy text to clipboard"""
-    return f"""
-    <script>
-        function copyToClipboard_{element_id}() {{
-            const text = `{text}`;
-            navigator.clipboard.writeText(text).then(function() {{
-                // Show temporary success message
-                const button = document.getElementById('copy_{element_id}');
-                const originalText = button.innerHTML;
-                button.innerHTML = '✓ Copied!';
-                button.style.backgroundColor = '#4CAF50';
-                setTimeout(function() {{
-                    button.innerHTML = originalText;
-                    button.style.backgroundColor = '#2196F3';
-                }}, 2000);
-            }}, function(err) {{
-                console.error('Could not copy text: ', err);
-                // Fallback for older browsers
-                const textArea = document.createElement('textarea');
-                textArea.value = text;
-                document.body.appendChild(textArea);
-                textArea.select();
-                document.execCommand('copy');
-                document.body.removeChild(textArea);
-            }});
-        }}
-    </script>
-    """
-
-def delete_transcription_js(original_index, prefix):
-    """Generate JavaScript to handle delete confirmation"""
-    return f"""
-    <script>
-        function confirmDelete_{prefix}_{original_index}() {{
-            if (confirm('Are you sure you want to delete this transcription?')) {{
-                // Trigger the Streamlit button click
-                const deleteButton = document.getElementById('delete_{prefix}_{original_index}');
-                if (deleteButton) {{
-                    deleteButton.click();
-                }}
-            }}
-        }}
-    </script>
-    """
-
-def clear_transcription_js():
-    """Generate JavaScript to handle clear transcription"""
-    return """
-    <script>
-        function clearTranscription() {
-            // Find the transcription result container
-            const resultContainer = document.querySelector('.success-box');
-            if (resultContainer) {
-                // Add a fade-out effect
-                resultContainer.style.opacity = '0.5';
-                resultContainer.style.transition = 'opacity 0.3s ease';
-                
-                // After a brief delay, trigger the Streamlit clear button
-                setTimeout(function() {
-                    const clearButton = document.getElementById('clear_transcription_button');
-                    if (clearButton) {
-                        clearButton.click();
-                    }
-                }, 300);
-            }
-        }
-    </script>
-    """
-
 def login_page():
     """Enhanced login page with Space Grotesk and Material Icons"""
     
@@ -714,11 +644,6 @@ def render_transcription_history(search_query, language_filter, prefix=""):
             </div>
             """, unsafe_allow_html=True)
             
-            # Inject the JS for this specific copy function
-            st.markdown(copy_to_clipboard_js(escaped_transcription, element_id), unsafe_allow_html=True)
-            
-            # Inject the JS for delete confirmation
-            st.markdown(delete_transcription_js(original_index, prefix), unsafe_allow_html=True)
     
     # End scrollable container
     st.markdown('</div>', unsafe_allow_html=True)
@@ -972,7 +897,7 @@ def render_transcription_card(item, original_index):
         if st.button("Speak", key=f"speak_{original_index}", icon=":material/volume_up:", 
                     help="Speak this transcription"):
             
-            with st.spinner("Generating high-quality speech..."):
+            with st.spinner("Loading..."):
                 from backend import text_to_speech_enhanced, get_audio_base64, cleanup_temp_audio
                 
                 # Get TTS settings from session state
@@ -1170,7 +1095,7 @@ def render_transcription_result(transcription, selected_language):
         
         if speak_clicked:
             if clean_transcription.strip():
-                with st.spinner("Generating speech..."):
+                with st.spinner("Loading..."):
                     # Import Google TTS functions (make sure these are available in your backend.py)
                     from backend import text_to_speech_gtts, get_audio_base64, cleanup_temp_audio
                     
@@ -1188,7 +1113,6 @@ def render_transcription_result(transcription, selected_language):
                                 <source src="data:audio/mp3;base64,{audio_base64}" type="audio/mp3">
                             </audio>
                             """, unsafe_allow_html=True)
-                            st.success("Playing audio...")
                         else:
                             st.error("Failed to process audio file")
                         
@@ -1198,6 +1122,7 @@ def render_transcription_result(transcription, selected_language):
                         st.error("Failed to generate speech. Please check your internet connection.")
             else:
                 st.warning("No text to speak")
+
     
     with col2:
         copy_clicked = st.button(
@@ -1259,7 +1184,7 @@ def render_transcription_result(transcription, selected_language):
     with col4:
         discard_clicked = st.button(
             "Discard", 
-            icon=":material/delete_forever:", 
+            icon=":material/delete:", 
             use_container_width=True, 
             key="discard_transcription_btn",
             help="Discard transcription without saving"
@@ -1289,5 +1214,4 @@ def handle_transcription_actions():
         current_time - st.session_state.feedback_clear_time > 3):
         st.session_state.button_feedback = None
         st.session_state.feedback_clear_time = None
-
 
