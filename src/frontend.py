@@ -1189,8 +1189,6 @@ def render_transcription_result(transcription, selected_language):
     """Render the transcription result with Material Icon action buttons"""
     from st_copy import copy_button
     
-    st.markdown("### Transcription Result")
-    
     # Clean the transcription text
     import re
     import html
@@ -1215,7 +1213,7 @@ def render_transcription_result(transcription, selected_language):
     with st.container():
         st.markdown(f"""
         <div style="border: 2px solid #4CAF50; border-radius: 5px; padding: 20px; background-color: #D3FF98; margin: 10px 0;">
-            <h4 style="color: #1A1A1A; margin: 0 0 10px 0;">{selected_language}</h4>
+            <h4 style="color: #1A1A1A; margin: 0 0 10px 0;">{selected_language} Transcription Result : </h4>
             <p style="font-size: 18px; color: #1A1A1A; margin: 0; font-weight: 500; line-height: 1.5;">{html.escape(clean_transcription)}</p>
         </div>
         """, unsafe_allow_html=True)
