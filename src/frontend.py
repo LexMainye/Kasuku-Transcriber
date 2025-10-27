@@ -257,8 +257,132 @@ def load_css():
         .card-text {
             line-height: 1.5 !important;
         }
-
+        
+        /* Toast notifications */
+        .copy-toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border-radius: 4px;
+            z-index: 10000;
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 500;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from { 
+                transform: translateX(100%); 
+                opacity: 0; 
+            }
+            to { 
+                transform: translateX(0); 
+                opacity: 1; 
+            }
+        }
+        
+        /* Button hover effects */
+        .stButton > button {
+            transition: all 0.3s ease !important;
+        }
+        
+        .stButton > button:hover {
+            transform: translateY(-1px) !important;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2) !important;
+        }
     </style>
+    """, unsafe_allow_html=True)
+
+def add_copy_to_clipboard_script():
+    """Add JavaScript copy functionality to the page"""
+    st.markdown("""
+    <script>
+    // Global function to copy text to clipboard
+    function copyTextToClipboard(text) {
+        // Method 1: Modern Clipboard API
+        if (navigator.clipboard && window.isSecureContext) {
+            return navigator.clipboard.writeText(text).then(() => {
+                return true;
+            }).catch(err => {
+                console.error('Clipboard API failed:', err);
+                return fallbackCopyToClipboard(text);
+            });
+        } else {
+            // Method 2: Fallback for older browsers
+            return fallbackCopyToClipboard(text);
+        }
+    }
+    
+    function fallbackCopyToClipboard(text) {
+        const textArea = document.createElement("textarea");
+        textArea.value = text;
+        textArea.style.position = "fixed";
+        textArea.style.left = "-999999px";
+        textArea.style.top = "-999999px";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        
+        try {
+            const successful = document.execCommand('copy');
+            document.body.removeChild(textArea);
+            return successful;
+        } catch (err) {
+            console.error('Fallback copy failed:', err);
+            document.body.removeChild(textArea);
+            return false;
+        }
+    }
+    
+    // Function to show toast notification
+    function showCopyToast(message, isSuccess) {
+        // Remove existing toasts
+        const existingToasts = document.querySelectorAll('.copy-toast');
+        existingToasts.forEach(toast => toast.remove());
+        
+        // Create new toast
+        const toast = document.createElement('div');
+        toast.className = 'copy-toast';
+        toast.innerHTML = message;
+        toast.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            background-color: ${isSuccess ? '#4CAF50' : '#f44336'};
+            color: white;
+            border-radius: 4px;
+            z-index: 10000;
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 500;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            animation: slideIn 0.3s ease;
+        `;
+        
+        document.body.appendChild(toast);
+        
+        // Remove toast after 3 seconds
+        setTimeout(() => {
+            if (toast.parentNode) {
+                toast.parentNode.removeChild(toast);
+            }
+        }, 3000);
+    }
+    
+    // Add CSS for toast animation
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+    `;
+    document.head.appendChild(style);
+    </script>
     """, unsafe_allow_html=True)
 
 def login_page():
@@ -849,26 +973,20 @@ def render_history_grid():
 
 # Updated render_transcription_card function for frontend.py
 def render_transcription_card(item, original_index):
-    """Render a single transcription card in vertical layout with Python TTS functionality"""
-    # Determine language flag and color
+    """Render a single transcription card with Streamlit buttons"""
+    # Determine language settings
     if item['language'] == "English":
-        #flag = "🇬🇧"
-        border_color = "#E7440E"  # red for English
+        border_color = "#E7440E"
         lang_code = "en"
     else:
-        #flag = "🇹🇿"
-        border_color = "#15D0E9"  # blue for Swahili
+        border_color = "#15D0E9"
         lang_code = "sw"
     
     transcription_text = item.get("transcription", "")
-    card_id = f"card_{original_index}"
     
-    # --- 1. GET THE SELECTED VOICE GENDER FROM SESSION STATE ---
-    selected_gender = st.session_state.get('tts_voice_gender', 'Female') # Defaults to Female
-    
-    # Display the card itself
+    # Display the card
     st.markdown(f"""
-    <div id="{card_id}" class="transcription-card"
+    <div class="transcription-card"
          style="border-left:4px solid {border_color};
                 border-radius:8px;
                 padding:16px;
@@ -877,8 +995,7 @@ def render_transcription_card(item, original_index):
                 box-shadow:0 2px 4px rgba(0,0,0,0.1);">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
             <div>
-                <span style="font-size:1.2rem;"> </span>
-                <span style="font-weight:bold;margin-left:4px;">{item.get('language','')}</span>
+                <span style="font-weight:bold;">{item.get('language','')}</span>
             </div>
             <div style="font-size:0.8rem;color:#777;">{item.get('timestamp','')}</div>
         </div>
@@ -888,28 +1005,28 @@ def render_transcription_card(item, original_index):
     </div>
     """, unsafe_allow_html=True)
     
-    # Add Streamlit buttons in columns: Speak, Copy, Delete
+    # Add Streamlit buttons in columns
     col1, col2, col3, _ = st.columns([1, 1, 1, 5])
 
-    # --- 2. TEXT-TO-SPEECH (TTS) BUTTON AND LOGIC ---:
+    # Add the copy script to the page (only once)
+    if original_index == 0:
+        add_copy_to_clipboard_script()
 
+    # Speak button
     with col1:
         if st.button("Speak", key=f"speak_{original_index}", icon=":material/volume_up:", 
-                    help="Speak this transcription"):
+                    help="Speak this transcription", use_container_width=True):
             
             with st.spinner("Loading..."):
                 from backend import text_to_speech_enhanced, get_audio_base64, cleanup_temp_audio
                 
-                # Get TTS settings from session state
                 selected_gender = st.session_state.get('tts_voice_gender', 'Female')
                 speech_rate = st.session_state.get('tts_speech_rate', 1.0)
                 voice_pitch = st.session_state.get('tts_voice_pitch', 1.0)
                 tts_engine = st.session_state.get('tts_engine', 'Chatterbox (High Quality)')
                 
-                # Determine if we should use Chatterbox
                 use_chatterbox = "Chatterbox" in tts_engine
                 
-                # Generate speech with enhanced settings
                 audio_path, engine_used = text_to_speech_enhanced(
                     transcription_text,
                     language=lang_code,
@@ -920,38 +1037,75 @@ def render_transcription_card(item, original_index):
                 )
                 
                 if audio_path:
-                    # Convert to base64 for HTML audio player
                     audio_base64 = get_audio_base64(audio_path)
                     
                     if audio_base64:
-                        # Determine audio format
                         audio_format = "wav" if audio_path.endswith('.wav') else "mp3"
-                     
+                        st.markdown(f"""
+                        <audio autoplay style="display: none;">
+                            <source src="data:audio/{audio_format};base64,{audio_base64}" type="audio/{audio_format}">
+                        </audio>
+                        """, unsafe_allow_html=True)
+                    else:
+                        st.error("Failed to process audio file")
+                    
+                    cleanup_temp_audio(audio_path)
                 else:
                     st.error("Failed to generate speech. Check your internet connection or TTS settings.")
 
-    # --- 3. COPY-TO-CLIPBOARD BUTTON AND LOGIC ---
+    # Copy button
     with col2:
-        if st.button("Copy", key=f"copy_{original_index}", 
-                    icon=":material/content_copy:"):
+        copy_clicked = st.button(
+            "Copy", 
+            key=f"copy_{original_index}", 
+            icon=":material/content_copy:", 
+            help="Copy to clipboard",
+            use_container_width=True
+        )
+        
+        if copy_clicked:
+            # Escape text for JavaScript
+            escaped_text = transcription_text.replace('"', '\\"').replace("'", "\\'").replace('\n', '\\n')
             
+            # Use JavaScript to copy
+            copy_script = f"""
+            <script>
+            copyTextToClipboard("{escaped_text}")
+                .then(success => {{
+                    if (success) {{
+                        showCopyToast("✓ Copied to clipboard!", true);
+                    }} else {{
+                        showCopyToast("❌ Failed to copy", false);
+                        // Fallback for difficult cases
+                        const tempTextArea = document.createElement('textarea');
+                        tempTextArea.value = `{transcription_text}`;
+                        document.body.appendChild(tempTextArea);
+                        tempTextArea.select();
+                        try {{
+                            document.execCommand('copy');
+                            showCopyToast("✓ Copied (fallback method)!", true);
+                        }} catch (err) {{
+                            showCopyToast("❌ Copy failed completely", false);
+                            alert("Please copy manually:\\n\\n{transcription_text}");
+                        }}
+                        document.body.removeChild(tempTextArea);
+                    }}
+                }});
+            </script>
+            """
+            st.markdown(copy_script, unsafe_allow_html=True)
+            
+            # Server-side backup
             try:
                 import pyperclip
                 pyperclip.copy(transcription_text)
-                st.toast("Copied to clipboard!")  # Auto-dismisses
-                
             except:
-                # For fallback, use balloons as confirmation
-                st.text_area(
-                    "Copy this text:",
-                    value=transcription_text,
-                    height=100,
-                    key=f"copy_textarea_{original_index}"
-                )
-                st.balloons()  # Fun visual feedback
-                
+                pass
+
+    # Delete button
     with col3:
-        if st.button("Delete", key=f"delete_{original_index}", icon=":material/delete_forever:", help="Delete this transcription"):
+        if st.button("Delete", key=f"delete_{original_index}", icon=":material/delete_forever:", 
+                    help="Delete this transcription", use_container_width=True):
             delete_transcription(original_index, st.session_state.transcription_history)
             st.rerun()
 
@@ -1017,44 +1171,27 @@ def render_main_interface(show_welcome=True):
 
 def render_transcription_result(transcription, selected_language):
     """Render the transcription result with speak, copy, save, and discard functionality"""
+    # Add the copy script to the page
+    add_copy_to_clipboard_script()
+    
     st.markdown("### Transcription Result")
     
-    # Clean the transcription text - remove HTML tags if present
+    # Clean the transcription text
     import re
     import html
+    import json
     
     def clean_transcription_text(text):
         if not text:
             return ""
-        
-        # Remove HTML tags
         clean_text = re.sub('<.*?>', '', text)
-        
-        # Decode HTML entities
         clean_text = html.unescape(clean_text)
-        
-        # Remove extra whitespace and comments
         clean_text = re.sub(r'<!--.*?-->', '', clean_text, flags=re.DOTALL)
         clean_text = ' '.join(clean_text.split())
-        
         return clean_text.strip()
     
     # Clean the transcription
     clean_transcription = clean_transcription_text(transcription)
-    
-    # If still looks like HTML structure, try to extract meaningful content
-    if not clean_transcription or len(clean_transcription) < 5:
-        # Look for actual text content in the original
-        lines = str(transcription).split('\n')
-        for line in lines:
-            line = line.strip()
-            if (line and 
-                not line.startswith('<') and 
-                not line.startswith('<!--') and
-                not any(css_word in line.lower() for css_word in ['style=', 'color:', 'font-', 'margin:', 'padding:']) and
-                len(line) > 3):
-                clean_transcription = line
-                break
     
     # Final fallback
     if not clean_transcription:
@@ -1063,23 +1200,22 @@ def render_transcription_result(transcription, selected_language):
     # Determine language code for TTS
     lang_code = "sw" if selected_language == "Swahili" else "en"
     
-    # Use Streamlit's success container instead of custom HTML
+    # Display transcription
     with st.container():
-        # Simple green border using CSS that definitely works
         st.markdown(f"""
         <div style="border: 2px solid #4CAF50; border-radius: 5px; padding: 20px; background-color: #D3FF98; margin: 10px 0;">
-            <h4 style="color: #1A1A1A; margin: 0 0 10px 0;"> {selected_language}</h4>
+            <h4 style="color: #1A1A1A; margin: 0 0 10px 0;">{selected_language}</h4>
             <p style="font-size: 18px; color: #1A1A1A; margin: 0; font-weight: 500; line-height: 1.5;">{html.escape(clean_transcription)}</p>
         </div>
         """, unsafe_allow_html=True)
     
-    # Store clean transcription for buttons
+    # Store clean transcription
     st.session_state.clean_transcription_for_buttons = clean_transcription
     
-    # Create four columns for action buttons: Speak, Copy, Save, Discard
+    # Create four columns for action buttons
     col1, col2, col3, col4 = st.columns(4)
     
-    # Initialize button states in session state if not exist
+    # Initialize button states
     if 'button_feedback' not in st.session_state:
         st.session_state.button_feedback = None
     
@@ -1096,18 +1232,14 @@ def render_transcription_result(transcription, selected_language):
         if speak_clicked:
             if clean_transcription.strip():
                 with st.spinner("Loading..."):
-                    # Import Google TTS functions (make sure these are available in your backend.py)
                     from backend import text_to_speech_gtts, get_audio_base64, cleanup_temp_audio
                     
-                    # Generate TTS audio file using Google TTS
                     audio_file_path = text_to_speech_gtts(clean_transcription, lang_code)
                     
                     if audio_file_path:
-                        # Convert to base64 for HTML audio player
                         audio_base64 = get_audio_base64(audio_file_path)
                         
                         if audio_base64:
-                            # Create HTML audio player that auto-plays (hidden)
                             st.markdown(f"""
                             <audio autoplay style="display: none;">
                                 <source src="data:audio/mp3;base64,{audio_base64}" type="audio/mp3">
@@ -1116,15 +1248,14 @@ def render_transcription_result(transcription, selected_language):
                         else:
                             st.error("Failed to process audio file")
                         
-                        # Clean up temporary file
                         cleanup_temp_audio(audio_file_path)
                     else:
                         st.error("Failed to generate speech. Please check your internet connection.")
             else:
                 st.warning("No text to speak")
 
-    
     with col2:
+        # Copy button using st.button with JavaScript integration
         copy_clicked = st.button(
             "Copy", 
             icon=":material/content_copy:", 
@@ -1134,21 +1265,32 @@ def render_transcription_result(transcription, selected_language):
         )
         
         if copy_clicked:
-            # Method 1: Try pyperclip (local only)
+            # Escape the text for JavaScript
+            escaped_text = clean_transcription.replace('"', '\\"').replace("'", "\\'").replace('\n', '\\n')
+            
+            # Use JavaScript to copy to clipboard
+            copy_script = f"""
+            <script>
+            copyTextToClipboard("{escaped_text}")
+                .then(success => {{
+                    if (success) {{
+                        showCopyToast("✓ Copied to clipboard!", true);
+                    }} else {{
+                        showCopyToast("❌ Failed to copy", false);
+                        // Fallback: show text in alert for manual copy
+                        alert("Copy failed. Here's the text to copy manually:\\n\\n{clean_transcription}");
+                    }}
+                }});
+            </script>
+            """
+            st.markdown(copy_script, unsafe_allow_html=True)
+            
+            # Also try server-side copy as backup (for desktop apps)
             try:
                 import pyperclip
                 pyperclip.copy(clean_transcription)
-                st.toast("Copied to clipboard!")
             except:
-                # Method 2: Show in text area for easy copying
-                st.info("📋 Select and copy the text below:", icon="ℹ️")
-                st.text_area(
-                    "Transcription Text",
-                    value=clean_transcription,
-                    height=150,
-                    key="copy_textarea_main",
-                    label_visibility="collapsed"
-                )
+                pass  # Ignore if pyperclip fails
     
     with col3:
         # Save button
@@ -1161,7 +1303,6 @@ def render_transcription_result(transcription, selected_language):
         )
 
         if save_clicked:
-            # Create and save transcription item
             from backend import create_transcription_item
 
             transcription_item = create_transcription_item(
@@ -1170,14 +1311,9 @@ def render_transcription_result(transcription, selected_language):
                 st.session_state.user_name
             )
 
-            # Add to history
             st.session_state.transcription_history.append(transcription_item)
-
-            # Clear current transcription from display
             st.session_state.current_transcription = None
             st.session_state.current_transcription_language = None
-
-            # Set feedback state
             st.session_state.button_feedback = "saved"
             st.rerun()
     
