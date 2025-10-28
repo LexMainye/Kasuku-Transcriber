@@ -1,5 +1,6 @@
 import streamlit as st
 import random
+from st_copy import copy_button
 from backend import authenticate_user, filter_transcriptions, delete_transcription,get_audio_base64, cleanup_temp_audio, text_to_speech_gtts
 
 def load_css():
@@ -257,9 +258,187 @@ def load_css():
         .card-text {
             line-height: 1.5 !important;
         }
-
+        
+        /* Toast notifications */
+        .copy-toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border-radius: 4px;
+            z-index: 10000;
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 500;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from { 
+                transform: translateX(100%); 
+                opacity: 0; 
+            }
+            to { 
+                transform: translateX(0); 
+                opacity: 1; 
+            }
+        }
+        
+        /* Button hover effects */
+        .stButton > button {
+            transition: all 0.3s ease !important;
+        }
+        
+        .stButton > button:hover {
+            transform: translateY(-1px) !important;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2) !important;
+        }
+                /* Hide default Streamlit button styling for icon buttons */
+        .icon-btn button {
+            background: none !important;
+            border: none !important;
+            padding: 8px !important;
+            min-width: auto !important;
+            width: 40px !important;
+            height: 40px !important;
+            border-radius: 50% !important;
+            color: #555 !important;
+            transition: all 0.3s ease !important;
+            box-shadow: none !important;
+        }
+        
+        .icon-btn button:hover {
+            background-color: rgba(0,0,0,0.08) !important;
+            transform: scale(1.1) !important;
+            box-shadow: none !important;
+        }
+        
+        .icon-btn button:active {
+            transform: scale(0.95) !important;
+        }
+        
+        /* Specific icon button colors */
+        .icon-btn.speak-btn button:hover {
+            color: #2196F3 !important;
+            background-color: rgba(33, 150, 243, 0.1) !important;
+        }
+        
+        .icon-btn.copy-btn button:hover {
+            color: #4CAF50 !important;
+            background-color: rgba(76, 175, 80, 0.1) !important;
+        }
+        
+        .icon-btn.save-btn button:hover {
+            color: #FF9800 !important;
+            background-color: rgba(255, 152, 0, 0.1) !important;
+        }
+        
+        .icon-btn.delete-btn button:hover {
+            color: #f44336 !important;
+            background-color: rgba(244, 67, 54, 0.1) !important;
+        }
+        
+        .icon-btn.discard-btn button:hover {
+            color: #9E9E9E !important;
+            background-color: rgba(158, 158, 158, 0.1) !important;
+        }
+        
+        /* Material icons styling */
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            font-size: 24px !important;
+            vertical-align: middle;
+        }
+        
+        /* Icon button container */
+        .icon-buttons-row {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid rgba(0,0,0,0.1);
+        }
+        
+        /* st-copy button customization */
+        div[data-testid="column"] .icon-btn button p {
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+        /* Icon button size variants */
+        
+        /* Small icons (24px) */
+        .icon-btn.size-small button {
+            width: 40px !important;
+            height: 40px !important;
+            padding: 8px !important;
+        }
+        
+        .icon-btn.size-small button svg,
+        .icon-btn.size-small .material-symbols-outlined {
+            font-size: 24px !important;
+            width: 24px !important;
+            height: 24px !important;
+        }
+        
+        /* Medium icons (28px) - DEFAULT */
+        .icon-btn button,
+        .icon-btn.size-medium button {
+            width: 48px !important;
+            height: 48px !important;
+            padding: 10px !important;
+        }
+        
+        .icon-btn button svg,
+        .icon-btn button .material-symbols-outlined,
+        .icon-btn.size-medium button svg,
+        .icon-btn.size-medium .material-symbols-outlined {
+            font-size: 28px !important;
+            width: 28px !important;
+            height: 28px !important;
+        }
+        
+        /* Large icons (32px) */
+        .icon-btn.size-large button {
+            width: 56px !important;
+            height: 56px !important;
+            padding: 12px !important;
+        }
+        
+        .icon-btn.size-large button svg,
+        .icon-btn.size-large .material-symbols-outlined {
+            font-size: 32px !important;
+            width: 32px !important;
+            height: 32px !important;
+        }
+        
+        /* Extra Large icons (36px) */
+        .icon-btn.size-xlarge button {
+            width: 64px !important;
+            height: 64px !important;
+            padding: 14px !important;
+        }
+        
+        .icon-btn.size-xlarge button svg,
+        .icon-btn.size-xlarge .material-symbols-outlined {
+            font-size: 36px !important;
+            width: 36px !important;
+            height: 36px !important;
+        }
     </style>
     """, unsafe_allow_html=True)
+
+def render_icon_button(icon_name, button_key, button_class, tooltip):
+    """Render a Material Icon button with Streamlit"""
+    return st.button(
+        f":material/{icon_name}:",
+        key=button_key,
+        help=tooltip,
+        use_container_width=False,
+        type="tertiary"
+    )
 
 def login_page():
     """Enhanced login page with Space Grotesk and Material Icons"""
@@ -849,26 +1028,22 @@ def render_history_grid():
 
 # Updated render_transcription_card function for frontend.py
 def render_transcription_card(item, original_index):
-    """Render a single transcription card in vertical layout with Python TTS functionality"""
-    # Determine language flag and color
+    """Render a single transcription card with Material Icon buttons"""
+    from st_copy import copy_button
+    
+    # Determine language settings
     if item['language'] == "English":
-        #flag = "🇬🇧"
-        border_color = "#E7440E"  # red for English
+        border_color = "#E7440E"
         lang_code = "en"
     else:
-        #flag = "🇹🇿"
-        border_color = "#15D0E9"  # blue for Swahili
+        border_color = "#15D0E9"
         lang_code = "sw"
     
     transcription_text = item.get("transcription", "")
-    card_id = f"card_{original_index}"
     
-    # --- 1. GET THE SELECTED VOICE GENDER FROM SESSION STATE ---
-    selected_gender = st.session_state.get('tts_voice_gender', 'Female') # Defaults to Female
-    
-    # Display the card itself
+    # Display the card
     st.markdown(f"""
-    <div id="{card_id}" class="transcription-card"
+    <div class="transcription-card"
          style="border-left:4px solid {border_color};
                 border-radius:8px;
                 padding:16px;
@@ -877,8 +1052,7 @@ def render_transcription_card(item, original_index):
                 box-shadow:0 2px 4px rgba(0,0,0,0.1);">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
             <div>
-                <span style="font-size:1.2rem;"> </span>
-                <span style="font-weight:bold;margin-left:4px;">{item.get('language','')}</span>
+                <span style="font-weight:bold;">{item.get('language','')}</span>
             </div>
             <div style="font-size:0.8rem;color:#777;">{item.get('timestamp','')}</div>
         </div>
@@ -888,72 +1062,68 @@ def render_transcription_card(item, original_index):
     </div>
     """, unsafe_allow_html=True)
     
-    # Add Streamlit buttons in columns: Speak, Copy, Delete
-    col1, col2, col3, _ = st.columns([1, 1, 1, 5])
-
-    # --- 2. TEXT-TO-SPEECH (TTS) BUTTON AND LOGIC ---:
-
-    with col1:
-        if st.button("Speak", key=f"speak_{original_index}", icon=":material/volume_up:", 
-                    help="Speak this transcription"):
-            
+    # Icon buttons row
+    cols = st.columns([0.4, 0.4, 0.4, 10],vertical_alignment="center")
+    
+    # Speak button
+    with cols[0]:
+        st.markdown('<div class="icon-btn speak-btn size-xlarge">', unsafe_allow_html=True)
+        if st.button(
+            ":material/volume_up:",
+            key=f"speak_{original_index}",
+            help="Speak",
+            type="tertiary",
+            use_container_width=False
+        ):
             with st.spinner("Loading..."):
                 from backend import text_to_speech_enhanced, get_audio_base64, cleanup_temp_audio
                 
-                # Get TTS settings from session state
                 selected_gender = st.session_state.get('tts_voice_gender', 'Female')
-                speech_rate = st.session_state.get('tts_speech_rate', 1.0)
-                voice_pitch = st.session_state.get('tts_voice_pitch', 1.0)
-                tts_engine = st.session_state.get('tts_engine', 'Chatterbox (High Quality)')
                 
-                # Determine if we should use Chatterbox
-                use_chatterbox = "Chatterbox" in tts_engine
-                
-                # Generate speech with enhanced settings
                 audio_path, engine_used = text_to_speech_enhanced(
                     transcription_text,
                     language=lang_code,
                     gender=selected_gender.lower(),
-                    rate=speech_rate,
-                    pitch=voice_pitch,
-                    use_chatterbox=use_chatterbox
+                    rate=1.0,
+                    pitch=1.0,
+                    use_chatterbox=False
                 )
                 
                 if audio_path:
-                    # Convert to base64 for HTML audio player
                     audio_base64 = get_audio_base64(audio_path)
                     
                     if audio_base64:
-                        # Determine audio format
                         audio_format = "wav" if audio_path.endswith('.wav') else "mp3"
-                     
-                else:
-                    st.error("Failed to generate speech. Check your internet connection or TTS settings.")
+                        st.markdown(f"""
+                        <audio autoplay style="display: none;">
+                            <source src="data:audio/{audio_format};base64,{audio_base64}" type="audio/{audio_format}">
+                        </audio>
+                        """, unsafe_allow_html=True)
+                        st.toast("Playing")
+                    
+                    cleanup_temp_audio(audio_path)
+        st.markdown('</div>', unsafe_allow_html=True)
 
-    # --- 3. COPY-TO-CLIPBOARD BUTTON AND LOGIC ---
-    with col2:
-        if st.button("Copy", key=f"copy_{original_index}", 
-                    icon=":material/content_copy:"):
-            
-            try:
-                import pyperclip
-                pyperclip.copy(transcription_text)
-                st.toast("Copied to clipboard!")  # Auto-dismisses
-                
-            except:
-                # For fallback, use balloons as confirmation
-                st.text_area(
-                    "Copy this text:",
-                    value=transcription_text,
-                    height=100,
-                    key=f"copy_textarea_{original_index}"
-                )
-                st.balloons()  # Fun visual feedback
-                
-    with col3:
-        if st.button("Delete", key=f"delete_{original_index}", icon=":material/delete_forever:", help="Delete this transcription"):
+    # Copy button - SIMPLIFIED
+    with cols[1]:
+        st.markdown('<div class="icon-btn copy-btn ">', unsafe_allow_html=True)
+        copy_button(transcription_text)
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    # Delete button
+    with cols[2]:
+        st.markdown('<div class="icon-btn delete-btn">', unsafe_allow_html=True)
+        if st.button(
+            ":material/delete:",
+            key=f"delete_{original_index}",
+            help="Delete",
+            type="tertiary",
+            use_container_width=False
+        ):
             delete_transcription(original_index, st.session_state.transcription_history)
+            st.toast("Deleted", icon="🗑️")
             st.rerun()
+        st.markdown('</div>', unsafe_allow_html=True)
 
 
 
@@ -1016,152 +1186,74 @@ def render_main_interface(show_welcome=True):
     return col1, col2, col3
 
 def render_transcription_result(transcription, selected_language):
-    """Render the transcription result with speak, copy, save, and discard functionality"""
-    st.markdown("### Transcription Result")
+    """Render the transcription result with Material Icon action buttons"""
+    from st_copy import copy_button
     
-    # Clean the transcription text - remove HTML tags if present
+    # Clean the transcription text
     import re
     import html
     
     def clean_transcription_text(text):
         if not text:
             return ""
-        
-        # Remove HTML tags
         clean_text = re.sub('<.*?>', '', text)
-        
-        # Decode HTML entities
         clean_text = html.unescape(clean_text)
-        
-        # Remove extra whitespace and comments
         clean_text = re.sub(r'<!--.*?-->', '', clean_text, flags=re.DOTALL)
         clean_text = ' '.join(clean_text.split())
-        
         return clean_text.strip()
     
-    # Clean the transcription
     clean_transcription = clean_transcription_text(transcription)
     
-    # If still looks like HTML structure, try to extract meaningful content
-    if not clean_transcription or len(clean_transcription) < 5:
-        # Look for actual text content in the original
-        lines = str(transcription).split('\n')
-        for line in lines:
-            line = line.strip()
-            if (line and 
-                not line.startswith('<') and 
-                not line.startswith('<!--') and
-                not any(css_word in line.lower() for css_word in ['style=', 'color:', 'font-', 'margin:', 'padding:']) and
-                len(line) > 3):
-                clean_transcription = line
-                break
-    
-    # Final fallback
     if not clean_transcription:
         clean_transcription = "Error: Could not extract transcribed text"
     
-    # Determine language code for TTS
     lang_code = "sw" if selected_language == "Swahili" else "en"
     
-    # Use Streamlit's success container instead of custom HTML
+    # Display transcription
     with st.container():
-        # Simple green border using CSS that definitely works
         st.markdown(f"""
         <div style="border: 2px solid #4CAF50; border-radius: 5px; padding: 20px; background-color: #D3FF98; margin: 10px 0;">
-            <h4 style="color: #1A1A1A; margin: 0 0 10px 0;"> {selected_language}</h4>
+            <h4 style="color: #1A1A1A; margin: 0 0 10px 0;">{selected_language} Transcription Result : </h4>
             <p style="font-size: 18px; color: #1A1A1A; margin: 0; font-weight: 500; line-height: 1.5;">{html.escape(clean_transcription)}</p>
         </div>
         """, unsafe_allow_html=True)
     
-    # Store clean transcription for buttons
-    st.session_state.clean_transcription_for_buttons = clean_transcription
+    # Icon action buttons
+    cols = st.columns([0.5, 0.5, 0.5, 0.5, 6],vertical_alignment="center")
     
-    # Create four columns for action buttons: Speak, Copy, Save, Discard
-    col1, col2, col3, col4 = st.columns(4)
-    
-    # Initialize button states in session state if not exist
-    if 'button_feedback' not in st.session_state:
-        st.session_state.button_feedback = None
-    
-    with col1:
-        # Speak button
-        speak_clicked = st.button(
-            "Speak", 
-            icon=":material/volume_up:", 
-            use_container_width=True, 
-            key="speak_transcription_btn",
-            help="Speak transcription aloud"
-        )
-        
-        if speak_clicked:
+    # Speak
+    with cols[0]:
+        st.markdown('<div class="icon-btn speak-btn">', unsafe_allow_html=True)
+        if st.button(":material/volume_up:", key="speak_btn", help="Speak", type="tertiary"):
             if clean_transcription.strip():
-                with st.spinner("Loading..."):
-                    # Import Google TTS functions (make sure these are available in your backend.py)
+                with st.spinner("Loading"):
                     from backend import text_to_speech_gtts, get_audio_base64, cleanup_temp_audio
                     
-                    # Generate TTS audio file using Google TTS
                     audio_file_path = text_to_speech_gtts(clean_transcription, lang_code)
                     
                     if audio_file_path:
-                        # Convert to base64 for HTML audio player
                         audio_base64 = get_audio_base64(audio_file_path)
                         
                         if audio_base64:
-                            # Create HTML audio player that auto-plays (hidden)
                             st.markdown(f"""
                             <audio autoplay style="display: none;">
                                 <source src="data:audio/mp3;base64,{audio_base64}" type="audio/mp3">
                             </audio>
                             """, unsafe_allow_html=True)
-                        else:
-                            st.error("Failed to process audio file")
                         
-                        # Clean up temporary file
                         cleanup_temp_audio(audio_file_path)
-                    else:
-                        st.error("Failed to generate speech. Please check your internet connection.")
-            else:
-                st.warning("No text to speak")
+        st.markdown('</div>', unsafe_allow_html=True)
 
+    # Copy - SIMPLIFIED
+    with cols[1]:
+        st.markdown('<div class="icon-btn copy-btn">', unsafe_allow_html=True)
+        copy_button(clean_transcription)
+        st.markdown('</div>', unsafe_allow_html=True)
     
-    with col2:
-        copy_clicked = st.button(
-            "Copy", 
-            icon=":material/content_copy:", 
-            use_container_width=True, 
-            key="copy_transcription_btn",
-            help="Copy transcription to clipboard"
-        )
-        
-        if copy_clicked:
-            # Method 1: Try pyperclip (local only)
-            try:
-                import pyperclip
-                pyperclip.copy(clean_transcription)
-                st.toast("Copied to clipboard!")
-            except:
-                # Method 2: Show in text area for easy copying
-                st.info("📋 Select and copy the text below:", icon="ℹ️")
-                st.text_area(
-                    "Transcription Text",
-                    value=clean_transcription,
-                    height=150,
-                    key="copy_textarea_main",
-                    label_visibility="collapsed"
-                )
-    
-    with col3:
-        # Save button
-        save_clicked = st.button(
-            "Save", 
-            icon=":material/save:", 
-            use_container_width=True, 
-            key="save_transcription_btn",
-            help="Save transcription"
-        )
-
-        if save_clicked:
-            # Create and save transcription item
+    # Save
+    with cols[2]:
+        st.markdown('<div class="icon-btn save-btn">', unsafe_allow_html=True)
+        if st.button(":material/save:", key="save_btn", help="Save",type="tertiary"):
             from backend import create_transcription_item
 
             transcription_item = create_transcription_item(
@@ -1170,31 +1262,22 @@ def render_transcription_result(transcription, selected_language):
                 st.session_state.user_name
             )
 
-            # Add to history
             st.session_state.transcription_history.append(transcription_item)
-
-            # Clear current transcription from display
             st.session_state.current_transcription = None
             st.session_state.current_transcription_language = None
-
-            # Set feedback state
-            st.session_state.button_feedback = "saved"
+            st.toast("Saved!", icon="💾")
             st.rerun()
+        st.markdown('</div>', unsafe_allow_html=True)
     
-    with col4:
-        discard_clicked = st.button(
-            "Discard", 
-            icon=":material/delete:", 
-            use_container_width=True, 
-            key="discard_transcription_btn",
-            help="Discard transcription without saving"
-        )
-        
-        if discard_clicked:
+    # Discard
+    with cols[3]:
+        st.markdown('<div class="icon-btn discard-btn">', unsafe_allow_html=True)
+        if st.button(":material/delete:", key="discard_btn", help="Discard", type="tertiary"):
             st.session_state.current_transcription = None
             st.session_state.current_transcription_language = None
-            st.session_state.button_feedback = "discarded"
+            st.toast("Discarded", icon="🗑️")
             st.rerun()
+        st.markdown('</div>', unsafe_allow_html=True)
 
 
 def handle_transcription_actions():
