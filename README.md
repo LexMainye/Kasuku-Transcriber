@@ -8,7 +8,7 @@
 
 # 🚀 Live Deployment on Streamlit Community Cloud
 
-[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://lexmainye-kasuku-transcriber-srcapp-otmxnb.streamlit.app/) **Check out the live deployment of Kasuku Transcriber!**
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://lexmainye-kasuku-transcriber-srcapp-otmxnb.streamlit.app/)
 
 
 # Technology Stack
