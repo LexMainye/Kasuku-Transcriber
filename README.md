@@ -2,9 +2,14 @@
 
 ![In Progress](https://img.shields.io/badge/Status-In%20Progress-green?style=for-the-badge&logo=wrench&logoColor=white)
 
-[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://github.com/codespaces/new?repo=LexMainye/Kasuku-Transcriber)
+
 
 - A simple speech transcription web app designed for non-standard speech patterns. The Kasuku webapp helps you convert audio recordings into text with support for Kenyan English and Swahili accents.
+
+# 🚀 Live Deployment of Demo Webapp
+
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://lexmainye-kasuku-transcriber-srcapp-otmxnb.streamlit.app/)
+
 
 # Technology Stack
 
