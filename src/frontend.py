@@ -1039,7 +1039,6 @@ def render_transcription_card(item, original_index):
         )
         
         if speak_button_clicked:
-            with st.spinner("Generating speech..."):
                 selected_gender = st.session_state.get('tts_voice_gender', 'Female')
                 
                 # 1. GET BASE64 DIRECTLY
@@ -1067,7 +1066,7 @@ def render_transcription_card(item, original_index):
                             <source src="data:audio/mp3;base64,{audio_base64}" type="audio/mp3">
                     </audio>
                     """, unsafe_allow_html=True)
-                    st.toast(f"Playing ({selected_gender} voice)")
+                    st.toast(f"Playing transcription")
                     
                     # Store in main audio_data for potential reuse
                     if 'audio_data' not in st.session_state:
@@ -1093,7 +1092,6 @@ def render_transcription_card(item, original_index):
             use_container_width=False
         ):
             delete_transcription(original_index, st.session_state.transcription_history)
-            st.toast("Deleted", icon="🗑️")
             st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
 
@@ -1171,7 +1169,6 @@ def render_transcription_result(transcription, selected_language):
         
         if speak_button_clicked:
             if clean_transcription.strip():
-                with st.spinner("Generating speech..."):
                     selected_gender = st.session_state.get('tts_voice_gender', 'Female')
                     
                     # 1. GET BASE64 DIRECTLY
@@ -1198,7 +1195,7 @@ def render_transcription_result(transcription, selected_language):
                             <source src="data:audio/mp3;base64,{audio_base64}" type="audio/mp3">
                         </audio>
                         """, unsafe_allow_html=True)
-                        st.toast(f"Playing ({selected_gender} {engine_used} voice)")
+                        st.toast(f"Playing transcription ")
                         
                         # Store in main audio_data for potential reuse
                         if 'audio_data' not in st.session_state:
@@ -1230,7 +1227,6 @@ def render_transcription_result(transcription, selected_language):
             st.session_state.transcription_history.append(transcription_item)
             st.session_state.current_transcription = None
             st.session_state.current_transcription_language = None
-            st.toast("Saved!", icon="💾")
             st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
     
@@ -1240,7 +1236,6 @@ def render_transcription_result(transcription, selected_language):
         if st.button(":material/delete:", key="discard_btn", help="Discard", type="tertiary"):
             st.session_state.current_transcription = None
             st.session_state.current_transcription_language = None
-            st.toast("Discarded", icon="🗑️")
             st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
 

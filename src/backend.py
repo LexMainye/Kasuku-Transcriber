@@ -164,8 +164,6 @@ def load_environment_variables():
     
     return all_loaded
 
-# Call this function immediately
-load_environment_variables()
 
 # Demo credentials with phone number included
 DEMO_USERS = {
