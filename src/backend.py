@@ -598,7 +598,7 @@ def create_credentials_from_env():
         "private_key_id": os.getenv('GOOGLE_PRIVATE_KEY_ID'),
         "private_key": private_key,
         "client_email": os.getenv('GOOGLE_CLIENT_EMAIL'),
-        "client_id": os.getenv('GOOGLE_CLIENT_ID'),
+        "client_id": 113898445227721331105,
         "auth_uri": "https://accounts.google.com/o/oauth2/auth",
         "token_uri": "https://oauth2.googleapis.com/token",
         "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
