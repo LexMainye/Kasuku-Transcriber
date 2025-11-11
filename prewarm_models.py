@@ -15,7 +15,7 @@ def prewarm_essential():
         from transformers import AutoModel, AutoTokenizer
         
         model_names = [
-            "cdli/whisper-small-Swahili_finetuned_small_CV20",
+            "cdli/whisper-small_finetuned_kenyan_swahili_nonstandard_speech_v0.9",
             "cdli/whisper-small_finetuned_kenyan_english_nonstandard_speech_v0.9"
         ]
 
