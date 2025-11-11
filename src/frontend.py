@@ -1,6 +1,7 @@
 import streamlit as st
 import random
 from st_copy import copy_button
+from streamlit.components.v1 import html as st_html
 
 from backend import (
     authenticate_user, 
@@ -1060,20 +1061,24 @@ def render_transcription_card(item, original_index):
                     }
                     
                     # 2. PLAY FILE using the stored base64 data
-                    r = random.randint(0, 1000000) # Generate a random number
-                    st.markdown(f"""
-                    <audio autoplay data-run="{r}" style="display: none;">
-                            <source src="data:audio/mp3;base64,{audio_base64}" type="audio/mp3">
-                    </audio>
-                    """, unsafe_allow_html=True)
-                    st.toast(f"Playing transcription")
-                    
-                    # Store in main audio_data for potential reuse
-                    if 'audio_data' not in st.session_state:
-                        st.session_state.audio_data = {}
-                    st.session_state.audio_data.update(st.session_state[audio_data_key])
-                else:
-                    st.error("Failed to generate speech.")
+                    r = random.randint(0, 1000000)
+                audio_html = f"""
+                <audio autoplay data-run="{r}">
+                    <source src="data:audio/mp3;base64,{audio_base64}" type="audio/mp3">
+                </audio>
+                """
+                # --- END OF DEFINITION ---
+                
+                # Now this line will work
+                st_html(audio_html, height=0) 
+                
+                st.toast(f"Playing transcription")
+                
+                if 'audio_data' not in st.session_state:
+                    st.session_state.audio_data = {}
+                st.session_state.audio_data.update(st.session_state[audio_data_key])
+                
+        st.markdown('</div>', unsafe_allow_html=True)
 
     # Copy button
     with cols[1]:
@@ -1189,22 +1194,24 @@ def render_transcription_result(transcription, selected_language):
                         }
                         
                         # 2. PLAY FILE using the stored base64 data
-                        r = random.randint(0,1000000) # Generate a random number
-                        st.markdown(f"""
-                        <audio autoplay data-run="{r}" style="display: none;">
-                            <source src="data:audio/mp3;base64,{audio_base64}" type="audio/mp3">
-                        </audio>
-                        """, unsafe_allow_html=True)
-                        st.toast(f"Playing transcription ")
-                        
-                        # Store in main audio_data for potential reuse
-                        if 'audio_data' not in st.session_state:
-                            st.session_state.audio_data = {}
-                        st.session_state.audio_data.update(st.session_state.current_audio_data)
-                    else:
-                        st.error("Failed to generate speech.")
+                        r = random.randint(0,1000000) 
+                    audio_html = f"""
+                    <audio autoplay data-run="{r}">
+                        <source src="data:audio/mp3;base64,{audio_base64}" type="audio/mp3">
+                    </audio>
+                    """
+                    # --- END OF DEFINITION ---
+
+                    # Now this line will work
+                    st_html(audio_html, height=0) 
+                    
+                    st.toast(f"Playing transcription ")
+                    
+                    if 'audio_data' not in st.session_state:
+                        st.session_state.audio_data = {}
+                    st.session_state.audio_data.update(st.session_state.current_audio_data)
             else:
-                st.warning("No text to speak.")
+                    st.error("Failed to generate speech.")
         st.markdown('</div>', unsafe_allow_html=True)
 
     # Copy
