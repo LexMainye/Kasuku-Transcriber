@@ -7,12 +7,165 @@ import io
 import hashlib
 import datetime
 import uuid
-import io
 import base64
 from pathlib import Path
 import tempfile
 import os
+import json
+import atexit
 
+def load_environment_variables():
+    """
+    Load Google Cloud environment variables from shell configuration.
+    Tries multiple methods to ensure variables are loaded.
+    """
+    print("\n" + "="*50)
+    print("LOADING ENVIRONMENT VARIABLES")
+    print("="*50)
+    
+    # Method 1: Check if already in environment
+    google_vars = {
+        'GOOGLE_PROJECT_ID': os.getenv('GOOGLE_PROJECT_ID'),
+        'GOOGLE_PRIVATE_KEY_ID': os.getenv('GOOGLE_PRIVATE_KEY_ID'),
+        'GOOGLE_PRIVATE_KEY': os.getenv('GOOGLE_PRIVATE_KEY'),
+        'GOOGLE_CLIENT_EMAIL': os.getenv('GOOGLE_CLIENT_EMAIL'),
+        'GOOGLE_CLIENT_ID': os.getenv('GOOGLE_CLIENT_ID'),
+        'GOOGLE_CLIENT_X509_CERT_URL': os.getenv('GOOGLE_CLIENT_X509_CERT_URL')
+    }
+    
+    # Check if all variables are already set
+    all_set = all(v is not None for v in google_vars.values())
+    
+    if all_set:
+        print("✓ All environment variables already loaded!")
+        return True
+    
+    print("Environment variables not found. Attempting to load from shell...")
+    
+    # Method 2: Load from shell with various techniques
+    shells_to_try = [
+        ('/bin/zsh', '~/.zshrc'),
+        ('/bin/bash', '~/.bashrc'),
+        ('/bin/bash', '~/.bash_profile'),
+    ]
+    
+    for shell_path, rc_file in shells_to_try:
+        if not os.path.exists(shell_path):
+            continue
+            
+        print(f"\nTrying {shell_path} with {rc_file}...")
+        
+        try:
+            # Expand home directory
+            expanded_rc = os.path.expanduser(rc_file)
+            
+            if not os.path.exists(expanded_rc):
+                print(f"  {rc_file} not found, skipping...")
+                continue
+            
+            # Create a command that sources the RC file and exports all GOOGLE_ vars
+            command = f"""
+            source {expanded_rc}
+            export | grep GOOGLE || env | grep GOOGLE
+            """
+            
+            result = subprocess.run(
+                command,
+                shell=True,
+                executable=shell_path,
+                capture_output=True,
+                text=True,
+                timeout=5
+            )
+            
+            if result.returncode == 0 and result.stdout.strip():
+                print(f"  ✓ Successfully read from {rc_file}")
+                
+                # Parse the output
+                loaded_count = 0
+                for line in result.stdout.strip().split('\n'):
+                    # Handle both 'export VAR=value' and 'VAR=value' formats
+                    line = line.strip()
+                    
+                    # Remove 'export ' prefix if present
+                    if line.startswith('export '):
+                        line = line[7:]
+                    
+                    # Remove 'declare -x ' prefix if present
+                    if line.startswith('declare -x '):
+                        line = line[11:]
+                    
+                    if '=' in line and 'GOOGLE' in line:
+                        key, value = line.split('=', 1)
+                        key = key.strip()
+                        value = value.strip()
+                        
+                        # Remove surrounding quotes
+                        if value.startswith('"') and value.endswith('"'):
+                            value = value[1:-1]
+                        elif value.startswith("'") and value.endswith("'"):
+                            value = value[1:-1]
+                        
+                        os.environ[key] = value
+                        loaded_count += 1
+                        print(f"    ✓ Loaded: {key}")
+                
+                if loaded_count > 0:
+                    print(f"  Successfully loaded {loaded_count} variables")
+                    break
+            else:
+                print(f"  No GOOGLE variables found in {rc_file}")
+                
+        except subprocess.TimeoutExpired:
+            print(f"  Timeout reading {rc_file}")
+        except Exception as e:
+            print(f"  Error: {e}")
+    
+    # Final verification
+    print("\n" + "-"*50)
+    print("FINAL STATUS:")
+    print("-"*50)
+    
+    google_vars_final = {
+        'GOOGLE_PROJECT_ID': os.getenv('GOOGLE_PROJECT_ID'),
+        'GOOGLE_PRIVATE_KEY_ID': os.getenv('GOOGLE_PRIVATE_KEY_ID'),
+        'GOOGLE_PRIVATE_KEY': os.getenv('GOOGLE_PRIVATE_KEY'),
+        'GOOGLE_CLIENT_EMAIL': os.getenv('GOOGLE_CLIENT_EMAIL'),
+        'GOOGLE_CLIENT_ID': os.getenv('GOOGLE_CLIENT_ID'),
+        'GOOGLE_CLIENT_X509_CERT_URL': os.getenv('GOOGLE_CLIENT_X509_CERT_URL')
+    }
+    
+    all_loaded = True
+    for key, value in google_vars_final.items():
+        if value:
+            # Show first/last few chars for security
+            if len(value) > 20:
+                display_value = f"{value[:10]}...{value[-10:]}"
+            else:
+                display_value = "***"
+            print(f"✓ {key}: {display_value}")
+        else:
+            print(f"✗ {key}: NOT SET")
+            all_loaded = False
+    
+    print("="*50 + "\n")
+    
+    if not all_loaded:
+        print("\n⚠️  WARNING: Some environment variables are missing!")
+        print("\nPlease check your ~/.zshrc file contains:")
+        print('export GOOGLE_PROJECT_ID="your-value"')
+        print('export GOOGLE_PRIVATE_KEY_ID="your-value"')
+        print('export GOOGLE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\\n...\\n-----END PRIVATE KEY-----\\n"')
+        print('export GOOGLE_CLIENT_EMAIL="your-value"')
+        print('export GOOGLE_CLIENT_ID="your-value"')
+        print('export GOOGLE_CLIENT_X509_CERT_URL="your-value"')
+        print("\nThen run: source ~/.zshrc")
+        print("Or start your app with: zsh -c 'source ~/.zshrc && streamlit run app.py'\n")
+    
+    return all_loaded
+
+# Call this function immediately
+load_environment_variables()
 
 # Demo credentials with phone number included
 DEMO_USERS = {
@@ -53,7 +206,7 @@ def authenticate_user(identifier: str, password: str):
 def load_swahili_model():
     """Load the Swahili fine-tuned Whisper model with caching"""
     try:
-        model_name = "cdli/whisper-small-Swahili_finetuned_small_CV20"
+        model_name = "cdli/whisper-small_finetuned_kenyan_swahili_nonstandard_speech_v0.9"
         
         with st.spinner("Loading Swahili Whisper model..."):
             processor = WhisperProcessor.from_pretrained(model_name)
@@ -104,7 +257,6 @@ def preprocess_audio(audio_data, sample_rate, target_sr=16000):
         st.error(f"Error preprocessing audio: {str(e)}")
         return None, None
 
-
 def transcribe_audio(processor, model, device, audio_data, language="sw"):
     """
     Transcribe audio using the Whisper model with support for longer audio.
@@ -134,7 +286,6 @@ def transcribe_audio(processor, model, device, audio_data, language="sw"):
     except Exception as e:
         st.error(f"Error during transcription: {str(e)}")
         return None
-
 
 def _transcribe_single_chunk(processor, model, device, audio_data, language):
     """Transcribe a single chunk of audio (≤30 seconds)"""
@@ -168,7 +319,6 @@ def _transcribe_single_chunk(processor, model, device, audio_data, language):
     # Decode transcription
     transcription = processor.batch_decode(predicted_ids, skip_special_tokens=True)[0]
     return transcription.strip()
-
 
 def _transcribe_long_audio(processor, model, device, audio_data, language, 
                            chunk_samples, sample_rate):
@@ -219,7 +369,6 @@ def _transcribe_long_audio(processor, model, device, audio_data, language,
     
     return final_transcription
 
-
 def _merge_transcriptions(transcriptions):
     """
     Intelligently merge chunk transcriptions, removing duplicate phrases
@@ -255,44 +404,6 @@ def _merge_transcriptions(transcriptions):
     
     # Clean up extra spaces
     return " ".join(merged.split())
-
-
-# Optional: Add alternative transcription function with timestamp support
-def transcribe_audio_with_timestamps(processor, model, device, audio_data, language="sw"):
-    """
-    Transcribe audio with word-level timestamps.
-    Useful for longer transcriptions where timing is important.
-    """
-    try:
-        inputs = processor(audio_data, sampling_rate=16000, return_tensors="pt")
-        input_features = inputs.input_features.to(device)
-        
-        with torch.no_grad():
-            # Generate with return_timestamps enabled
-            predicted_ids = model.generate(
-                input_features,
-                language=language,
-                task="transcribe",
-                max_length=448,
-                num_beams=5 if language == "sw" else 4,
-                do_sample=(language == "sw"),
-                temperature=0.6 if language == "sw" else 1.0,
-                top_p=0.9 if language == "sw" else 1.0,
-                return_timestamps=True  # Enable timestamp generation
-            )
-        
-        # Decode with timestamps
-        transcription = processor.batch_decode(
-            predicted_ids, 
-            skip_special_tokens=False,  # Keep timestamp tokens
-            output_offsets=True
-        )
-        
-        return transcription
-        
-    except Exception as e:
-        st.error(f"Error during transcription with timestamps: {str(e)}")
-        return None
 
 def process_recorded_audio(recorded_audio):
     """Process recorded audio from Streamlit audio input"""
@@ -359,225 +470,273 @@ def save_transcription_to_history(transcription, selected_language, user_name, t
     transcription_history.append(transcription_item)
     return transcription_history
 
-try:
-    from chatterbox import Chatterbox
-    CHATTERBOX_AVAILABLE = True
-except ImportError:
-    CHATTERBOX_AVAILABLE = False
-    print("Chatterbox not installed. Install with: pip install chatterbox-tts")
+# Google Cloud TTS Functions with Environment Variable Support
 
-# Initialize Chatterbox (add this near other initialization code)
-@st.cache_resource
-def initialize_chatterbox():
-    """Initialize Chatterbox TTS engine with caching"""
-    if not CHATTERBOX_AVAILABLE:
-        return None
-    
-    try:
-        tts_engine = Chatterbox()
-        return tts_engine
-    except Exception as e:
-        print(f"Failed to initialize Chatterbox: {str(e)}")
-        return None
+# Global variable to track temporary credential file
+_temp_cred_file = None
 
 
-def text_to_speech_chatterbox(text, language="en", gender="female", rate=1.0, pitch=1.0):
-    """
-    Convert text to speech using Chatterbox TTS (offline, high quality)
-    
-    Args:
-        text (str): Text to convert to speech
-        language (str): Language code ('en' for English, 'sw' for Swahili)
-        gender (str): Voice gender ('female' or 'male')
-        rate (float): Speech rate (0.5 to 2.0, default 1.0)
-        pitch (float): Voice pitch (0.5 to 2.0, default 1.0)
-    
-    Returns:
-        str: Path to the generated audio file, or None if failed
-    """
-    if not CHATTERBOX_AVAILABLE:
-        print("Chatterbox not available, falling back to gTTS")
-        return text_to_speech_gtts(text, language)
-    
-    try:
-        tts_engine = initialize_chatterbox()
-        
-        if tts_engine is None:
-            print("Failed to initialize Chatterbox")
-            return text_to_speech_gtts(text, language)
-        
-        # Create temporary file for audio
-        with tempfile.NamedTemporaryFile(delete=False, suffix='.wav') as temp_file:
-            temp_path = temp_file.name
-        
-        # Configure voice settings
-        voice_config = {
-            'language': language,
-            'gender': gender.lower(),
-            'rate': rate,
-            'pitch': pitch
-        }
-        
-        # Generate speech
-        tts_engine.speak(
-            text=text,
-            output_path=temp_path,
-            **voice_config
-        )
-        
-        return temp_path
-        
-    except Exception as e:
-        print(f"Chatterbox TTS Error: {str(e)}")
-        # Fallback to gTTS
-        return text_to_speech_gtts(text, language)
-
-
-def text_to_speech_enhanced(text, language="en", gender="female", rate=1.0, pitch=1.0, use_chatterbox=True):
-    """
-    Enhanced TTS with automatic fallback between Chatterbox and gTTS
-    
-    Args:
-        text (str): Text to convert to speech
-        language (str): Language code ('en' for English, 'sw' for Swahili)
-        gender (str): Voice gender ('female' or 'male')
-        rate (float): Speech rate (0.5 to 2.0)
-        pitch (float): Voice pitch (0.5 to 2.0)
-        use_chatterbox (bool): Try Chatterbox first if available
-    
-    Returns:
-        tuple: (audio_file_path, tts_engine_used) or (None, None) if failed
-    """
-    if use_chatterbox and CHATTERBOX_AVAILABLE:
-        audio_path = text_to_speech_chatterbox(text, language, gender, rate, pitch)
-        if audio_path:
-            return audio_path, "chatterbox"
-    
-    # Fallback to gTTS
-    audio_path = text_to_speech_gtts(text, language)
-    if audio_path:
-        return audio_path, "gtts"
-    
-    return None, None
-
-
-def get_available_voices():
-    """
-    Get list of available voices for the TTS system
-    
-    Returns:
-        dict: Available voices organized by language and gender
-    """
-    if CHATTERBOX_AVAILABLE:
-        try:
-            tts_engine = initialize_chatterbox()
-            if tts_engine:
-                return {
-                    "English": {
-                        "female": ["Emma", "Olivia", "Ava"],
-                        "male": ["James", "Noah", "Liam"]
-                    },
-                    "Swahili": {
-                        "female": ["Amani", "Zuri", "Nia"],
-                        "male": ["Jabari", "Kazi", "Rafiki"]
-                    }
-                }
-        except:
-            pass
-    
-    # Fallback voice list for gTTS
-    return {
-        "English": {
-            "female": ["Default Female"],
-            "male": ["Default Male"]
-        },
-        "Swahili": {
-            "female": ["Default Female"],
-            "male": ["Default Male"]
-        }
-    }
-
-
-def convert_audio_format(input_path, output_format='mp3'):
-    """
-    Convert audio file to different format (useful for web playback)
-    
-    Args:
-        input_path (str): Path to input audio file
-        output_format (str): Desired output format ('mp3', 'wav', 'ogg')
-    
-    Returns:
-        str: Path to converted audio file or None if failed
-    """
-    try:
-        from pydub import AudioSegment
-        
-        # Load audio
-        audio = AudioSegment.from_file(input_path)
-        
-        # Create output path
-        output_path = input_path.rsplit('.', 1)[0] + f'.{output_format}'
-        
-        # Export in desired format
-        audio.export(output_path, format=output_format)
-        
-        return output_path
-        
-    except ImportError:
-        print("pydub not installed. Install with: pip install pydub")
-        return input_path
-    except Exception as e:
-        print(f"Audio conversion error: {str(e)}")
-        return input_path
-
-
-def preload_tts_cache(common_phrases, language="en"):
-    """
-    Preload commonly used phrases into TTS cache for faster response
-    
-    Args:
-        common_phrases (list): List of common phrases to preload
-        language (str): Language code
-    """
-    if not CHATTERBOX_AVAILABLE:
+def debug_private_key():
+    """Debug helper to check private key format"""
+    private_key = os.getenv('GOOGLE_PRIVATE_KEY')
+    if not private_key:
+        print("ERROR: GOOGLE_PRIVATE_KEY not set")
         return
     
-    try:
-        tts_engine = initialize_chatterbox()
-        if tts_engine:
-            for phrase in common_phrases:
-                # Generate and cache
-                temp_path = text_to_speech_chatterbox(phrase, language)
-                if temp_path:
-                    cleanup_temp_audio(temp_path)
-    except Exception as e:
-        print(f"TTS preload error: {str(e)}")
+    has_literal_backslash_n = '\\n' in private_key
+    has_actual_newlines = '\n' in private_key
+    has_begin = 'BEGIN PRIVATE KEY' in private_key
+    has_end = 'END PRIVATE KEY' in private_key
+    
+    print(f"Private key length: {len(private_key)}")
+    print(f"Has literal \\n: {has_literal_backslash_n}")
+    print(f"Has actual newlines: {has_actual_newlines}")
+    print(f"First 50 chars: {private_key[:50]}")
+    print(f"Last 50 chars: {private_key[-50:]}")
+    print(f"Has BEGIN marker: {has_begin}")
+    print(f"Has END marker: {has_end}")
 
 
-# Keep existing gTTS function as fallback
-def text_to_speech_gtts(text, language="en"):
+
+def create_credentials_from_env():
     """
-    Convert text to speech using Google TTS (requires internet connection)
-    Fallback option when Chatterbox is not available
+    Create Google Cloud credentials dictionary from environment variables
     """
+    required_env_vars = [
+        'GOOGLE_PROJECT_ID',
+        'GOOGLE_PRIVATE_KEY_ID', 
+        'GOOGLE_PRIVATE_KEY',
+        'GOOGLE_CLIENT_EMAIL',
+        'GOOGLE_CLIENT_ID',
+        'GOOGLE_CLIENT_X509_CERT_URL'
+    ]
+    
+    # Check if all required environment variables are set
+    missing_vars = [var for var in required_env_vars if not os.getenv(var)]
+    if missing_vars:
+        print(f"Warning: Missing environment variables: {missing_vars}")
+        return None
+    
+    # Get the private key
+    private_key = os.getenv('GOOGLE_PRIVATE_KEY')
+    
+    print(f"DEBUG: Original key length: {len(private_key)}")
+    
+    # Step 1: Replace any literal \n strings with actual newlines
+    if '\\n' in private_key:
+        private_key = private_key.replace('\\n', '\n')
+        print("DEBUG: Replaced literal \\n sequences")
+    
+    # Step 2: Fix the broken markers by rejoining split lines
+    # The key comes with these broken across lines:
+    # "-----BEGIN PRIVATE \nKEY-----" and "-----END \nPRIVATE KEY-----"
+    
+    lines = private_key.split('\n')
+    print(f"DEBUG: Split into {len(lines)} lines")
+    
+    fixed_lines = []
+    skip_next = False
+    
+    for i in range(len(lines)):
+        if skip_next:
+            skip_next = False
+            continue
+            
+        line = lines[i].strip()
+        
+        # Check if this line is incomplete and needs the next line
+        if i + 1 < len(lines):
+            next_line = lines[i + 1].strip()
+            
+            # Fix: "-----BEGIN PRIVATE" + "KEY-----"
+            if line == '-----BEGIN PRIVATE' and next_line == 'KEY-----':
+                fixed_lines.append('-----BEGIN PRIVATE KEY-----')
+                skip_next = True
+                continue
+            
+            # Fix: "-----END" + "PRIVATE KEY-----"
+            if line == '-----END' and next_line == 'PRIVATE KEY-----':
+                fixed_lines.append('-----END PRIVATE KEY-----')
+                skip_next = True
+                continue
+        
+        # Keep all non-empty lines
+        if line:
+            fixed_lines.append(line)
+    
+    print(f"DEBUG: After fixing, {len(fixed_lines)} lines")
+    if fixed_lines:
+        print(f"DEBUG: First line: '{fixed_lines[0]}'")
+        print(f"DEBUG: Last line: '{fixed_lines[-1]}'")
+    
+    # Step 3: Reconstruct with proper newlines
+    private_key = '\n'.join(fixed_lines) + '\n'
+    
+    print(f"DEBUG: Final key starts with: {private_key[:50]}")
+    print(f"DEBUG: Final key ends with: {private_key[-50:]}")
+    
+    # Verify proper markers
+    if '-----BEGIN PRIVATE KEY-----' not in private_key:
+        print("ERROR: Missing proper BEGIN PRIVATE KEY marker")
+        return None
+        
+    if '-----END PRIVATE KEY-----' not in private_key:
+        print("ERROR: Missing proper END PRIVATE KEY marker")
+        return None
+    
+    # Should have at least 3 lines (BEGIN, key data, END)
+    if len(fixed_lines) < 3:
+        print(f"ERROR: Only {len(fixed_lines)} lines, need at least 3")
+        return None
+    
+    print("✓ Private key formatted correctly!")
+    
+    # Create credentials dictionary
+    credentials_dict = {
+        "type": "service_account",
+        "project_id": os.getenv('GOOGLE_PROJECT_ID'),
+        "private_key_id": os.getenv('GOOGLE_PRIVATE_KEY_ID'),
+        "private_key": private_key,
+        "client_email": os.getenv('GOOGLE_CLIENT_EMAIL'),
+        "client_id": os.getenv('GOOGLE_CLIENT_ID'),
+        "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+        "token_uri": "https://oauth2.googleapis.com/token",
+        "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+        "client_x509_cert_url": os.getenv('GOOGLE_CLIENT_X509_CERT_URL'),
+        "universe_domain": "googleapis.com"
+    }
+    
+    return credentials_dict
+
+def setup_google_credentials():
+    """
+    Setup Google Cloud credentials from environment variables or file
+    Returns the path to the credentials file used
+    """
+    global _temp_cred_file
+    
+    # First try environment variables
+    credentials_dict = create_credentials_from_env()
+    
+    if credentials_dict:
+        # Create temporary credentials file from environment variables
+        temp_cred_file = tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False)
+        json.dump(credentials_dict, temp_cred_file)
+        temp_cred_file.close()
+        
+        # Store the path for cleanup
+        _temp_cred_file = temp_cred_file.name
+        
+        # Set the environment variable for Google Cloud
+        os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = temp_cred_file.name
+        print("Using Google Cloud credentials from environment variables")
+        return temp_cred_file.name
+    
+    # Fall back to file-based credentials
+    CREDENTIALS_PATH = Path(__file__).parent / "credentials.json"
+    if CREDENTIALS_PATH.exists():
+        os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = str(CREDENTIALS_PATH)
+        print("Using Google Cloud credentials from credentials.json file")
+        return str(CREDENTIALS_PATH)
+    
+    print("Warning: No Google Cloud credentials found in environment variables or credentials.json")
+    return None
+
+def cleanup_temp_credentials():
+    """Clean up temporary credential files on exit"""
+    global _temp_cred_file
+    if _temp_cred_file and os.path.exists(_temp_cred_file):
+        try:
+            os.unlink(_temp_cred_file)
+            print(f"Cleaned up temporary credential file: {_temp_cred_file}")
+        except Exception as e:
+            print(f"Error cleaning up temporary credential file: {e}")
+
+# Register cleanup function to run when the program exits
+atexit.register(cleanup_temp_credentials)
+
+# Setup Google Cloud credentials
+CREDENTIALS_FILE = setup_google_credentials()
+
+if not CREDENTIALS_FILE:
+    print("Warning: Google Cloud credentials not configured")
+    GOOGLE_TTS_AVAILABLE = False
+else:
     try:
-        from gtts import gTTS
-        import tempfile
-        
-        with tempfile.NamedTemporaryFile(delete=False, suffix='.mp3') as temp_file:
-            temp_path = temp_file.name
-        
-        tts = gTTS(text=text, lang=language, slow=False)
-        tts.save(temp_path)
-        
-        return temp_path
-        
+        from google.cloud import texttospeech
+        GOOGLE_TTS_AVAILABLE = True
+        print("Google Cloud TTS initialized successfully")
     except ImportError:
-        print("gTTS not installed. Install with: pip install gtts")
-        return None
+        GOOGLE_TTS_AVAILABLE = False
+        print("Google Cloud TTS not installed. Install with: pip install google-cloud-texttospeech")
+
+@st.cache_data(max_entries=50)
+def text_to_speech(text, language="en", gender="Female"):
+    """
+    Convert text to speech using Google Cloud TTS (high-quality, online).
+    
+    Args:
+        text (str): Text to convert to speech
+        language (str): Language code ('en' or 'sw')
+        gender (str): Voice gender ('Female' or 'Male')
+    
+    Returns:
+        tuple: (audio_base64, tts_engine_used) or (None, None) if failed
+    """
+    if not GOOGLE_TTS_AVAILABLE:
+        st.error("Google Cloud TTS library not installed.")
+        return None, None
+    
+    if not CREDENTIALS_FILE:
+        st.error("Google Cloud credentials not configured.")
+        return None, None
+    
+    try:
+        # Initialize client
+        client = texttospeech.TextToSpeechClient()
+
+        # Set the text input
+        synthesis_input = texttospeech.SynthesisInput(text=text)
+
+        # Select the voice based on language and gender
+        lang_code = "en-US" if language == "en" else "sw-KE"
+        
+        if language == "en":
+            # English Wavenet voices are stable
+            if gender == "Male":
+                voice_name = "en-US-Chirp3-HD-Iapetus"
+            else:
+                voice_name = "en-US-Chirp3-HD-Leda"
+        else:  # Swahili
+            if gender == "Male":
+                voice_name = "sw-KE-Chirp3-HD-Iapetus"  # Male (Standard)
+            else:
+                voice_name = "sw-KE-Chirp3-HD-Leda"  # Female (Standard)
+
+        voice = texttospeech.VoiceSelectionParams(
+            language_code=lang_code, name=voice_name
+        )
+
+        # Select the audio file type
+        audio_config = texttospeech.AudioConfig(
+            audio_encoding=texttospeech.AudioEncoding.MP3
+        )
+
+        # Perform the text-to-speech request
+        response = client.synthesize_speech(
+            input=synthesis_input, voice=voice, audio_config=audio_config
+        )
+        # Convert audio content (bytes) directly to base64
+        # No more temporary files!
+        audio_base64 = base64.b64encode(response.audio_content).decode()
+            
+        return audio_base64, "google-cloud"
+        # ------------------------------
+
     except Exception as e:
-        print(f"gTTS Error: {str(e)}")
-        return None
+        print(f"Google Cloud TTS Error: {str(e)}")
+        st.error(f"Failed to generate speech: {e}")
+        return None, None
 
 def get_audio_base64(file_path):
     """Convert audio file to base64 for HTML audio player"""
@@ -596,5 +755,4 @@ def cleanup_temp_audio(file_path):
         if file_path and os.path.exists(file_path):
             os.unlink(file_path)
     except Exception as e:
-
         print(f"Cleanup error: {str(e)}")

@@ -1,7 +1,16 @@
 import streamlit as st
 import random
 from st_copy import copy_button
-from backend import authenticate_user, filter_transcriptions, delete_transcription,get_audio_base64, cleanup_temp_audio, text_to_speech_gtts
+
+from backend import (
+    authenticate_user, 
+    filter_transcriptions, 
+    delete_transcription,
+    get_audio_base64, 
+    cleanup_temp_audio, 
+    text_to_speech  # <-- Google Cloud function
+)
+# ---------------------------------------------------
 
 def load_css():
     """Load custom CSS styling for the application"""
@@ -369,36 +378,7 @@ def load_css():
         }
         /* Icon button size variants */
         
-        /* Small icons (24px) */
-        .icon-btn.size-small button {
-            width: 40px !important;
-            height: 40px !important;
-            padding: 8px !important;
-        }
-        
-        .icon-btn.size-small button svg,
-        .icon-btn.size-small .material-symbols-outlined {
-            font-size: 24px !important;
-            width: 24px !important;
-            height: 24px !important;
-        }
-        
-        /* Medium icons (28px) - DEFAULT */
-        .icon-btn button,
-        .icon-btn.size-medium button {
-            width: 48px !important;
-            height: 48px !important;
-            padding: 10px !important;
-        }
-        
-        .icon-btn button svg,
-        .icon-btn button .material-symbols-outlined,
-        .icon-btn.size-medium button svg,
-        .icon-btn.size-medium .material-symbols-outlined {
-            font-size: 28px !important;
-            width: 28px !important;
-            height: 28px !important;
-        }
+
         
         /* Large icons (32px) */
         .icon-btn.size-large button {
@@ -409,20 +389,6 @@ def load_css():
         
         .icon-btn.size-large button svg,
         .icon-btn.size-large .material-symbols-outlined {
-            font-size: 32px !important;
-            width: 32px !important;
-            height: 32px !important;
-        }
-        
-        /* Extra Large icons (36px) */
-        .icon-btn.size-xlarge button {
-            width: 64px !important;
-            height: 64px !important;
-            padding: 14px !important;
-        }
-        
-        .icon-btn.size-xlarge button svg,
-        .icon-btn.size-xlarge .material-symbols-outlined {
             font-size: 36px !important;
             width: 36px !important;
             height: 36px !important;
@@ -686,11 +652,6 @@ def login_page():
         </div>
         """, unsafe_allow_html=True)
 
-# Use this enhanced version
-if __name__ == "__main__":
-    login_page()
-
-# Add this updated section to your render_sidebar() function in frontend.py
 
 def render_sidebar():
     """Render the sidebar with navigation and enhanced TTS settings"""
@@ -699,7 +660,7 @@ def render_sidebar():
         
         st.markdown("##")
         
-        # Navigation buttons (keep existing)
+        # Navigation buttons
         if st.button(
             "Record Yourself",
             type="secondary" if st.session_state.current_view == 'Record Yourself' else "secondary",
@@ -710,7 +671,7 @@ def render_sidebar():
             st.session_state.current_view = 'Record Yourself'
             st.rerun()
         
-        # History Button (keep existing)
+        # History Button
         history_count = len(st.session_state.transcription_history)
         history_label = f"Saved Transcriptions ({history_count})" if history_count > 0 else "Saved Transcriptions"
         
@@ -726,7 +687,7 @@ def render_sidebar():
         
         st.markdown("##")
         
-        # Language selection (keep existing)
+        # Language selection
         if st.session_state.current_view == 'Record Yourself':
             st.markdown("### :material/docs: Language to Transcribe")
             
@@ -748,21 +709,22 @@ def render_sidebar():
         
         st.markdown("##")
         
-        # --- SIMPLIFIED TEXT-TO-SPEECH SETTINGS ---
+        # --- TTS SETTINGS ---
+        # This is kept as it's used by our new Google TTS function
         st.markdown("### :material/volume_up: Text-to-Speech Settings")
         
         # Voice Selection
         st.selectbox(
             "Select Voice",
-            options=["Female", "Male"],
+            options=["Female", "Male"], # These are logical names
             index=0,
-            key="tts_voice_gender",
+            key="tts_voice_gender", # This session state is read by the speak buttons
             label_visibility="collapsed"
         )
         
         st.markdown("##")
         
-        # User info and logout (keep existing)
+        # User info and logout
         st.markdown("### :material/info: User Info")
         st.markdown(f"""
         <div style="display: flex; align-items: center; gap: 8px;">
@@ -1026,11 +988,11 @@ def render_history_grid():
     # Close the cards container
     st.markdown('</div>', unsafe_allow_html=True)
 
-# Updated render_transcription_card function for frontend.py
+# --- UPDATED FUNCTION ---
 def render_transcription_card(item, original_index):
     """Render a single transcription card with Material Icon buttons"""
     from st_copy import copy_button
-    
+
     # Determine language settings
     if item['language'] == "English":
         border_color = "#E7440E"
@@ -1063,51 +1025,61 @@ def render_transcription_card(item, original_index):
     """, unsafe_allow_html=True)
     
     # Icon buttons row
-    cols = st.columns([0.4, 0.4, 0.4, 10],vertical_alignment="center")
+    cols = st.columns([0.4, 0.4, 0.4, 10], vertical_alignment="center")
     
     # Speak button
     with cols[0]:
         st.markdown('<div class="icon-btn speak-btn size-xlarge">', unsafe_allow_html=True)
-        if st.button(
+        speak_button_clicked = st.button(
             ":material/volume_up:",
             key=f"speak_{original_index}",
             help="Speak",
             type="tertiary",
             use_container_width=False
-        ):
-            with st.spinner("Loading..."):
-                from backend import text_to_speech_enhanced, get_audio_base64, cleanup_temp_audio
-                
+        )
+        
+        if speak_button_clicked:
+            with st.spinner("Generating speech..."):
                 selected_gender = st.session_state.get('tts_voice_gender', 'Female')
                 
-                audio_path, engine_used = text_to_speech_enhanced(
+                # 1. GET BASE64 DIRECTLY
+                audio_base64, engine_used = text_to_speech(
                     transcription_text,
                     language=lang_code,
-                    gender=selected_gender.lower(),
-                    rate=1.0,
-                    pitch=1.0,
-                    use_chatterbox=False
+                    gender=selected_gender
                 )
                 
-                if audio_path:
-                    audio_base64 = get_audio_base64(audio_path)
+                if audio_base64:
+                    # Save audio data to session state
+                    audio_data_key = f"audio_{original_index}"
+                    st.session_state[audio_data_key] = {
+                        'base64': audio_base64,
+                        'format': "mp3",
+                        'gender': selected_gender,
+                        'engine': engine_used
+                        # No more 'file_path' or 'pending_cleanup'
+                    }
                     
-                    if audio_base64:
-                        audio_format = "wav" if audio_path.endswith('.wav') else "mp3"
-                        st.markdown(f"""
-                        <audio autoplay style="display: none;">
-                            <source src="data:audio/{audio_format};base64,{audio_base64}" type="audio/{audio_format}">
-                        </audio>
-                        """, unsafe_allow_html=True)
-                        st.toast("Playing")
+                    # 2. PLAY FILE using the stored base64 data
+                    r = random.randint(0, 1000000) # Generate a random number
+                    st.markdown(f"""
+                    <audio autoplay data-run="{r}" style="display: none;">
+                            <source src="data:audio/mp3;base64,{audio_base64}" type="audio/mp3">
+                    </audio>
+                    """, unsafe_allow_html=True)
+                    st.toast(f"Playing ({selected_gender} voice)")
                     
-                    cleanup_temp_audio(audio_path)
-        st.markdown('</div>', unsafe_allow_html=True)
+                    # Store in main audio_data for potential reuse
+                    if 'audio_data' not in st.session_state:
+                        st.session_state.audio_data = {}
+                    st.session_state.audio_data.update(st.session_state[audio_data_key])
+                else:
+                    st.error("Failed to generate speech.")
 
-    # Copy button - SIMPLIFIED
+    # Copy button
     with cols[1]:
-        st.markdown('<div class="icon-btn copy-btn ">', unsafe_allow_html=True)
-        copy_button(transcription_text)
+        st.markdown('<div class="icon-btn copy-btn">', unsafe_allow_html=True)
+        copy_button(transcription_text, key=f"copy_{original_index}")
         st.markdown('</div>', unsafe_allow_html=True)
 
     # Delete button
@@ -1126,39 +1098,13 @@ def render_transcription_card(item, original_index):
         st.markdown('</div>', unsafe_allow_html=True)
 
 
-
-
-# Optional: Add a utility function to stop all speech synthesis
 def stop_all_speech():
     """Stop all currently playing TTS"""
+    # This function is fine as-is
     st.markdown("""
     <script>
         if (typeof speechSynthesis !== 'undefined' && speechSynthesis.speaking) {
             speechSynthesis.cancel();
-        }
-    </script>
-    """, unsafe_allow_html=True)
-
-
-# Optional: Add a utility function to stop all speech synthesis
-def stop_all_speech():
-    """Stop all currently playing TTS"""
-    st.markdown("""
-    <script>
-        if (typeof speechSynthesis !== 'undefined' && speechSynthesis.speaking) {
-            speechSynthesis.cancel();
-        }
-    </script>
-    """, unsafe_allow_html=True)
-
-
-# Optional: Add a utility function to stop all speech synthesis
-def stop_all_speech():
-    """Stop all currently playing TTS"""
-    st.markdown("""
-    <script>
-        if (window.speechSynthesis.speaking) {
-            window.speechSynthesis.cancel();
         }
     </script>
     """, unsafe_allow_html=True)
@@ -1166,13 +1112,10 @@ def stop_all_speech():
 
 def render_main_interface(show_welcome=True):
     """Render the main transcription interface"""
-    # Center title and add welcome message
+    # This function is fine as-is
     col1, col2, col3 = st.columns([1, 2, 1])
     
     with col2:
-    
-        
-        # Only show welcome message if show_welcome is True
         if show_welcome:
             st.markdown(f"""
             <div style='text-align: center; padding: 1rem; margin-bottom: 2rem;'>
@@ -1180,11 +1123,11 @@ def render_main_interface(show_welcome=True):
             </div>
             """, unsafe_allow_html=True)
         else:
-            # Add empty space to maintain layout consistency
             st.markdown("<div style='height: 4rem;'></div>", unsafe_allow_html=True)
     
     return col1, col2, col3
 
+# --- UPDATED FUNCTION ---
 def render_transcription_result(transcription, selected_language):
     """Render the transcription result with Material Icon action buttons"""
     from st_copy import copy_button
@@ -1198,7 +1141,7 @@ def render_transcription_result(transcription, selected_language):
             return ""
         clean_text = re.sub('<.*?>', '', text)
         clean_text = html.unescape(clean_text)
-        clean_text = re.sub(r'<!--.*?-->', '', clean_text, flags=re.DOTALL)
+        clean_text = re.sub(r'', '', clean_text, flags=re.DOTALL)
         clean_text = ' '.join(clean_text.split())
         return clean_text.strip()
     
@@ -1219,41 +1162,64 @@ def render_transcription_result(transcription, selected_language):
         """, unsafe_allow_html=True)
     
     # Icon action buttons
-    cols = st.columns([0.5, 0.5, 0.5, 0.5, 6],vertical_alignment="center")
+    cols = st.columns([0.5, 0.5, 0.5, 0.5, 6], vertical_alignment="center")
     
     # Speak
     with cols[0]:
         st.markdown('<div class="icon-btn speak-btn">', unsafe_allow_html=True)
-        if st.button(":material/volume_up:", key="speak_btn", help="Speak", type="tertiary"):
+        speak_button_clicked = st.button(":material/volume_up:", key="speak_btn", help="Speak", type="tertiary")
+        
+        if speak_button_clicked:
             if clean_transcription.strip():
-                with st.spinner("Loading"):
-                    from backend import text_to_speech_gtts, get_audio_base64, cleanup_temp_audio
+                with st.spinner("Generating speech..."):
+                    selected_gender = st.session_state.get('tts_voice_gender', 'Female')
                     
-                    audio_file_path = text_to_speech_gtts(clean_transcription, lang_code)
+                    # 1. GET BASE64 DIRECTLY
+                    audio_base64, engine_used = text_to_speech(
+                        clean_transcription,
+                        language=lang_code,
+                        gender=selected_gender
+                    )
                     
-                    if audio_file_path:
-                        audio_base64 = get_audio_base64(audio_file_path)
+                    if audio_base64:
+                        # Save audio data to session state
+                        st.session_state.current_audio_data = {
+                            'base64': audio_base64,
+                            'format': "mp3",
+                            'gender': selected_gender,
+                            'engine': engine_used
+                            # No more 'file_path' or 'pending_cleanup'
+                        }
                         
-                        if audio_base64:
-                            st.markdown(f"""
-                            <audio autoplay style="display: none;">
-                                <source src="data:audio/mp3;base64,{audio_base64}" type="audio/mp3">
-                            </audio>
-                            """, unsafe_allow_html=True)
+                        # 2. PLAY FILE using the stored base64 data
+                        r = random.randint(0,1000000) # Generate a random number
+                        st.markdown(f"""
+                        <audio autoplay data-run="{r}" style="display: none;">
+                            <source src="data:audio/mp3;base64,{audio_base64}" type="audio/mp3">
+                        </audio>
+                        """, unsafe_allow_html=True)
+                        st.toast(f"Playing ({selected_gender} {engine_used} voice)")
                         
-                        cleanup_temp_audio(audio_file_path)
+                        # Store in main audio_data for potential reuse
+                        if 'audio_data' not in st.session_state:
+                            st.session_state.audio_data = {}
+                        st.session_state.audio_data.update(st.session_state.current_audio_data)
+                    else:
+                        st.error("Failed to generate speech.")
+            else:
+                st.warning("No text to speak.")
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # Copy - SIMPLIFIED
+    # Copy
     with cols[1]:
         st.markdown('<div class="icon-btn copy-btn">', unsafe_allow_html=True)
-        copy_button(clean_transcription)
+        copy_button(clean_transcription, key="copy_main_result")
         st.markdown('</div>', unsafe_allow_html=True)
     
     # Save
     with cols[2]:
         st.markdown('<div class="icon-btn save-btn">', unsafe_allow_html=True)
-        if st.button(":material/save:", key="save_btn", help="Save",type="tertiary"):
+        if st.button(":material/bookmark:", key="save_btn", help="Save", type="tertiary"):
             from backend import create_transcription_item
 
             transcription_item = create_transcription_item(
@@ -1261,7 +1227,6 @@ def render_transcription_result(transcription, selected_language):
                 selected_language,
                 st.session_state.user_name
             )
-
             st.session_state.transcription_history.append(transcription_item)
             st.session_state.current_transcription = None
             st.session_state.current_transcription_language = None
@@ -1282,7 +1247,7 @@ def render_transcription_result(transcription, selected_language):
 
 def handle_transcription_actions():
     """Helper function to handle transcription actions in the main app flow"""
-
+    # This function is fine as-is
     
     # Clear any lingering feedback messages after a delay
     if 'feedback_clear_time' not in st.session_state:
@@ -1297,4 +1262,3 @@ def handle_transcription_actions():
         current_time - st.session_state.feedback_clear_time > 3):
         st.session_state.button_feedback = None
         st.session_state.feedback_clear_time = None
-

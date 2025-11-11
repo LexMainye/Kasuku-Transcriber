@@ -54,6 +54,7 @@ def initialize_session_state():
     if 'tts_voice_gender' not in st.session_state:
         st.session_state.tts_voice_gender = 'Female' # Default gender
     # ----------------------------------
+    
 
 # app.py
 
@@ -154,7 +155,7 @@ def main():
     """Main function to handle authentication flow"""
     # Initialize session state variables
     initialize_session_state()
-    
+     
     # Show login page or main app based on authentication status
     if not st.session_state.authenticated:
         login_page()

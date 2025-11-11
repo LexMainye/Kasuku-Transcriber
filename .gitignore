@@ -29,3 +29,7 @@ build/
 # DS_Store files
 .DS_Store  
 **/.DS_Store
+
+#credentials and config files
+credentials.json
+*.json
