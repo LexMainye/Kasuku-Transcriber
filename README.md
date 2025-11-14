@@ -7,6 +7,10 @@
 - A simple speech transcription web app designed for non-standard speech patterns. The Kasuku webapp helps you convert audio recordings into text with support for Kenyan English and Swahili accents.
 
 
+# 🚀 Live Deployment of Demo Webapp
+
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://lexmainye-kasuku-transcriber-srcapp-unyrft.streamlit.app/)
+
 
 
 # Technology Stack
