@@ -172,3 +172,6 @@ For reference, see:
 * Modern web browser with microphone support
 * Microphone access permissions
 
+## Contact Information
+[![Linktree](https://img.shields.io/badge/LexMainye-39E09B?style=flat&logo=linktree&logoColor=white)](https://linktr.ee/mainye)
+
