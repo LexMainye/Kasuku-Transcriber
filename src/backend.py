@@ -204,7 +204,7 @@ def authenticate_user(identifier: str, password: str):
 def load_swahili_model():
     """Load the Swahili fine-tuned Whisper model with caching"""
     try:
-        model_name = "cdli/whisper-small_finetuned_kenyan_swahili_nonstandard_speech_v0.9"
+        model_name = "smainye/whisper-small-kenyan-swahili-nonstandard"
         
         with st.spinner("Loading Swahili Whisper model..."):
             processor = WhisperProcessor.from_pretrained(model_name)
@@ -223,7 +223,7 @@ def load_swahili_model():
 def load_english_model():
     """Load the English Whisper model with caching"""
     try:
-        model_name = "cdli/whisper-small_finetuned_kenyan_english_nonstandard_speech_v0.9"
+        model_name = "smainye/whisper-small-kenyan-english-nonstandard"
         
         with st.spinner("Loading English Whisper model..."):
             processor = WhisperProcessor.from_pretrained(model_name)
