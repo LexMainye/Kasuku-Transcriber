@@ -1,6 +1,4 @@
-# Kasuku 🦜
-
-![In Progress](https://img.shields.io/badge/Status-In%20Progress-green?style=for-the-badge&logo=wrench&logoColor=white)
+# Kasuku 
 
 
 
